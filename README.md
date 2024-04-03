@@ -31,3 +31,7 @@ Everyone is welcome to join the public meetings of the working group.
 
 * If you want to discuss a specific topic, please create and issue or pull-request. We will go over all the newly created issues and PRs in the next meeting.
 * Add your file under /Meetings/YYYYMMDD/.
+
+## Tools:
+
+* Create Bages: https://shields.io/badges
