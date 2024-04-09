@@ -1,5 +1,7 @@
 Meeting Agenda:
 
+Join the meeting! See https://calendar.google.com/calendar/embed?src=c_cgoeq917rpeap7vse3is1hl310%40group.calendar.google.com&ctz=Europe%2FZurich For time and Meeting room.
+
 - Token Tracking
    - https://77i6o-oqaaa-aaaag-qbm6q-cai.ic0.app/axon/9
    - Proposed Schedule
