@@ -7,11 +7,14 @@ Join the meeting! See https://calendar.google.com/calendar/embed?src=c_cgoeq917r
    - Proposed Schedule
      - Meeting Attendance : 60,000
      - 1,000/Tokens Per Miniute - Within reason.
-     - Anything over 60k/week needs WG Approval
+     - Founder Reserve? 15%
+     - Anything over 60k(60 minutes)/week needs WG Approval
      - Fatheree is Minter/Proposer, We can change this in the future or now depending on what the WG wants to do.
 - Proposal Review
    - External Actor Endpoints
    - Internal Datastructure Workflow
-- Principal Collection   
+- Principal Collection
 - Web 2 Messaging Event Research - Byron
 - Multiplayer games - webrtc - Matt
+- Issue Review
+   - Open: https://github.com/icdevs/ICEventsWG/issues/2    
