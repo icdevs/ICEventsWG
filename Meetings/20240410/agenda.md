@@ -17,4 +17,12 @@ Join the meeting! See https://calendar.google.com/calendar/embed?src=c_cgoeq917r
 - Web 2 Messaging Event Research - Byron
 - Multiplayer games - webrtc - Matt
 - Issue Review
-   - Open: https://github.com/icdevs/ICEventsWG/issues/2    
+   - Open: https://github.com/icdevs/ICEventsWG/issues/2    Two types of subscriber Approach
+   - Open: https://github.com/icdevs/ICEventsWG/issues/3    Message Identifier Discussion
+   - Open: https://github.com/icdevs/ICEventsWG/issues/4    Message Source
+   - Open: https://github.com/icdevs/ICEventsWG/issues/5    Valid Publisher/Subscriber List
+   - Open: https://github.com/icdevs/ICEventsWG/issues/6    Publication Mode
+   - Open: https://github.com/icdevs/ICEventsWG/issues/7    Message Confirmation Response Type
+   - Open: https://github.com/icdevs/ICEventsWG/issues/8    ICRC for Allow Lists
+
+     
