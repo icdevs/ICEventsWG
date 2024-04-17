@@ -1,12 +1,12 @@
 |ICRC|Title|Author|Discussions|Status|Type|Category|Created|
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-|72|Minimal Pub-Sub Standard|Austin Fatheree (@skilesare), @ava-vs|https://github.com/dfinity/ICRC/issues/72|Draft|Standards Track||2024-04-10|
+|72|Minimal Event-Driven Pub-Sub Standard|Austin Fatheree (@skilesare), @ava-vs|https://github.com/dfinity/ICRC/issues/72|Draft|Standards Track||2024-04-10|
 
 
 
-# ICRC-72: Minimal Pub-Sub Standard
+# ICRC-72: Minimal Event-Driven Pub-Sub Standard
 
-ICRC-72, the Minimal Pub-Sub Standard, is designed to establish a robust framework for implementing publish-subscribe messaging patterns on the DFINITY Internet Computer. This standard facilitates the communication and synchronization of data across different canisters, enabling them to subscribe to and publish events effectively. By formalizing the interactions between publishers, subscribers, and broadcasters, ICRC-72 aims to enhance the interoperability, scalability, and efficiency of decentralized applications on the Internet Computer.
+ICRC-72, the Minimal Event-Driven Pub-Sub Standard, is designed to establish a robust framework for implementing publish-subscribe messaging patterns on the DFINITY Internet Computer. This standard facilitates the communication and synchronization of data across different canisters, enabling them to subscribe to and publish events effectively. By formalizing the interactions between publishers, subscribers, and broadcasters, ICRC-72 aims to enhance the interoperability, scalability, and efficiency of decentralized applications on the Internet Computer.
 
 The publish-subscribe pattern, a pivotal architectural style, allows components of distributed systems to exchange information asynchronously. This pattern decouples the service provider (publisher) from the service consumers (subscribers), using an event-driven approach that promotes loose coupling and dynamic network topologies. ICRC-72 leverages these benefits to provide a standardized mechanism where canisters can subscribe to specific types of messages and react to them, without needing to poll or maintain a direct linkage to the message originators.
 
