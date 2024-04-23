@@ -11,9 +11,13 @@ Info on working groups: https://github.com/dfinity/ICRC
 | X |  [Next](https://github.com/dfinity/ICRC/issues/X) | ![Status Badge](https://img.shields.io/badge/STATUS-DRAFT-ffcc00.svg) |
 | X |  [Next](https://github.com/dfinity/ICRC/issues/X) | ![Status Badge](https://img.shields.io/badge/STATUS-IDEA-888888.svg) |
 
-## Publications
+## Links
 
 [Announcement Post](https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/2)
+
+[OpenChat] (https://oc.app/group/wgoc3-uiaaa-aaaar-bbbqa-cai/?ref=yenup-paaaa-aaaaf-aboha-cai)
+
+[Token Registry - Contribute and earn](https://77i6o-oqaaa-aaaag-qbm6q-cai.ic0.app/axon/9)
 
 ## Process
 | Status                   | Description                                                                                                              |
@@ -34,4 +38,4 @@ Everyone is welcome to join the public meetings of the working group.
 
 ## Tools:
 
-* Create Bages: https://shields.io/badges
+* Create Badges: https://shields.io/badges
