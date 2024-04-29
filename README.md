@@ -39,3 +39,58 @@ Everyone is welcome to join the public meetings of the working group.
 ## Tools:
 
 * Create Badges: https://shields.io/badges
+
+## Roles and Membership
+
+Membership generally only takes a request to be added to the list along with your suggested roles. (Pull requests accepted.) But please also provide Austin with your plug principal.
+
+### Official Roles
+
+- **Thought Leader**: Review issues, and provide proactive responses and insight.
+- **Voting Member**: Vote on "Vote Required" GitHub issues.
+- **Secretary**: Responsible for recording meetings, producing notes, and providing attendance.
+- **Treasurer**: Responsible for minting tokens and keeping the ledger.
+- **Developer Advocate**: Acts as a liaison between the developers and the wider community. They gather feedback, promote the adoption of the system, and help in documenting and demonstrating the system’s capabilities.
+- **Community Manager**: Engages with users and potential contributors on platforms like forums, social media, and during public events. They build and maintain relationships within the community and gather user feedback for improvements.
+- **Documentation Specialist**: Creates and maintains clear and thorough documentation WG. Responsible for compiling and versioning Drafts.
+
+### Official Member List(You've given Austin a Principal):
+
+- Austin Fatheree
+  Roles:
+    - Thought Leader
+    - Voting Member
+    - Secretary (But would love a volunteer)
+      
+- Ilia Agafonov
+  
+  Roles:
+  - Thought Leader
+  - Voting Member
+    
+- Ethan Celletti
+
+  Roles:
+  - Thought Leader
+  - Voting Member
+ 
+- Byron Becker
+
+  Roles:
+  - Voting Member
+  
+- Lachlan Witham
+
+  Roles
+  - Thought Leader
+  - Voting Member
+ 
+- Zhenya Usenko
+
+  Roles:
+  - Voting Member
+
+- Matthew Harmon
+
+  Roles:
+  - Voting Member
