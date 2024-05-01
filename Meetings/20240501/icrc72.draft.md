@@ -255,6 +255,14 @@ type SubscriptionInfo {
   stats: vec ICRC16Map;
 };
 
+type SubscriptionUpdate = {
+        subscriptionId : nat;
+        newConfig : opt vec {text, ICRC16};
+        newFilter : opt Text;
+        newSkip : opt nat;
+        newStopped : opt bool;
+    };
+
 ```
 
 * `icrc72:subscription:stats:notifications`- #Nat; the number of notifications sent to the subscription
