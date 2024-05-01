@@ -16,7 +16,9 @@ Ratify the Role list in vote.
 
 https://github.com/icdevs/ICEventsWG/issues?q=is%3Aissue+is%3Aopen+label%3A%22Vote+Required%22
 
-## 4. Issue discussion:
+## 4. Ilia's Client Work
+
+## 5. Issue discussion:
 
  8. https://github.com/icdevs/ICEventsWG/issues/8 - ICRC for allow lists
  9. https://github.com/icdevs/ICEventsWG/issues/9 - CBOR
