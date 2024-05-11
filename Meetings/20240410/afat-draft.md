@@ -20,7 +20,19 @@ This standard describes how these roles interact within the Internet Computer ec
 
 ## Data Representations
 
-### Message Identifiers
+### Event Identifiers
+
+1. Event identifiers MUST be represented as natural numbers with infinite precision. These numbers MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
+
+2. Events MAY specify a `prev_id` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prev_id` based on implementation specifics, such that:
+
+   - In Single Publisher, Single Broadcaster systems, a consistent chain of messages SHOULD be maintained with no messages being dropped.
+   
+   - In Single Publisher, Multi-Broadcaster systems, a consistent chain of messaging SHOULD be maintained according to nonce partitioning, with no messages being dropped.
+
+   - In Multi Publisher, Multi-Broadcaster systems, consistent chains SHOULD be maintained across publisher-based partitions. Each partition SHOULD either remain consistent or all messages MAY be ordered, provided there is an event-specific epoch close-out schema.
+
+Discussion - https://github.com/icdevs/ICEventsWG/issues/3
 
 ### Data Types
 
@@ -275,7 +287,11 @@ icrc72_confirm_messages(vec nat) -> variant{
 
 Subscriber functions
 
-icrc72_handle_message(vec message) : -> () //oneshot
+
+icrc72_event_listener : (event: Event) -> async (); //untrusted - one shot
+icrc72_event_listener_trusted : (event: Event) -> async (opt Value);  //#Map for maps, #Nat for ID.
+
+Discussion: https://github.com/icdevs/ICEventsWG/issues/2
 
 Authorization Canisters
 //discussion point: is there a generalized ICRC for whitelists/allowlists, etc

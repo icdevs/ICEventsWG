@@ -329,22 +329,24 @@ Facilitates the retrieval of sublists from a specific list, helping in understan
 icrc_75_get_list_lists: (list: List, prev: opt List, take: opt nat) -> query async vec List;
 ```
 
-##### icrc_75_get_list_members
+##### icrc_75_member_of
 
-Retrieves identities from a list in a pageable manner. This is crucial for operations requiring validation of membership and for interfaces that need to display list compositions to users.
+Retrieves memberships for a principal or list.
 
 ```candid
-// Retrieve identities from a list, pageable
-icrc_75_get_list_members: (list: List, prev: opt Identity, take: opt nat) -> query async vec Identity;
+// Retrieve lits for a ListItem, pageable
+icrc_75_member_of: (ListIte, prev: opt ListItem, take: opt nat) -> query async vec List;
 ```
 
 ##### icrc_75_is_member
 
 Checks if specified identities are members of the lists they are queried against. This is a crucial function for validating access and permissions within the ecosystem, ensuring that operations are performed by authorized identities.
 
+For the double vec List parameter, the inner vector is `or-ed` with its vector members and the outer vector members are `and-ed` together to allow for the query of mutual membership.
+
 ```candid
 // Check membership of identities within lists
-icrc_75_is_member: (vec (Identity, List)) -> query async vec bool;
+icrc_75_is_member: (vec (Identity, vec { vec{List}})) -> query async vec bool;
 ```
 
 #### Token Management Functions
