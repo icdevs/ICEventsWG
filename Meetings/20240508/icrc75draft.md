@@ -21,6 +21,18 @@ type Identity = Principal;
 
 The `Principal` is a type intrinsic to the Internet Computer, providing a secure and verifiable way to represent identities. The identities are text encoded and include a checksum for integrity verification.
 
+### Account
+
+An account in ICRC-75 is similar to an ICRC-1 Account type.
+
+```candid
+type Account = {
+  owner: Principal;
+  subaccount: Blob
+};
+```
+
+
 ### List
 
 A list in ICRC-75 represents a collection of identities and potentially other nested lists, enabling the composition of complex group structures. Each list is uniquely identified by a textual name within a namespace, facilitating organized management and referencing.
@@ -58,10 +70,10 @@ This section defines the necessary data types and structures used within ICRC-75
 The types defined to manage the lists inside the ICRC-75 standard are critical for understanding how identities and lists are structured, how they interact, and how permissions are managed. Below is an explanation of each type:
 
 1. **`ListItem`**:
-   - A `variant` that can hold either an `Identity` or a `List`. This structure allows each list item to be either a direct reference to an identity (a principal on the Internet Computer) or another list (effectively creating nested or hierarchical lists).
+   - A `variant` that can hold either an `Identity` or a `List` or an `Account`. This structure allows each list item to be either a direct reference to an identity (a principal on the Internet Computer) or another list (effectively creating nested or hierarchical lists).
 
 2. **`AuthorizedRequestItem`**:
-   - A `record` combining a `List` and an `Identity`. Represents a request to check if specific identities are authorized in the context of specified lists. This aids efficient batch processing of access checks.
+   - A `record` combining an `ListItem` and a double vector of `Lists`. Represents a request to check if specific identities are authorized in the context of specified lists. This aids efficient batch processing of access checks.
 
 3. **`AuthorizedResponse`**:
    - A vector of type `Bool`. It returns a series of Boolean values that correspond to the authorization check result of each item in the `AuthorizedRequestItem`. True means authorized; false means not authorized.
@@ -96,9 +108,10 @@ These types are used across the API of the canister to perform tasks like:
 type ListItem = variant {
     Identity: Identity;
     List: List;
+    Account: Account
 };
 
-type AuthorizedRequestItem = record { List; Identity };
+type AuthorizedRequestItem = record { ListItem; [[List]] };
 
 type AuthorizedResponse = vec Bool;
 
@@ -271,9 +284,10 @@ Specific to managing the membership of lists, this function allows the addition 
 ```candid
 // Add or remove identities and sublists in a list
 icrc_75_manage_list_membership: (vec record {
-  list: List,
-  memo: blob,
-  created_at_time: nat,
+  list: List;
+  memo: blob;
+  created_at_time: nat;
+  from_subaccount: ?blob;
   action: variant { 
     Add: ListItem; 
     Remove: ListItem }
@@ -287,10 +301,11 @@ Focused on manipulating the direct properties of a list, such as renaming or del
 ```candid
 // Manage list itself (rename, delete)
 icrc_75_manage_list_properties: (vec { record { 
-  list: List,
-  memo: blob,
-  created_at_time: nat
-  action: ManageListPropertyRequestItem 
+  list: List;
+  memo: blob;
+  from_subaccount: ?blob;
+  created_at_time: nat;
+  action: ManageListPropertyRequestItem ;
 }}) -> async vec ManageListPropertyResult;
 ```
 
@@ -346,7 +361,7 @@ For the double vec List parameter, the inner vector is `or-ed` with its vector m
 
 ```candid
 // Check membership of identities within lists
-icrc_75_is_member: (vec (Identity, vec { vec{List}})) -> query async vec bool;
+icrc_75_is_member: (vec AuthorizedRequestItem) -> query async vec bool;
 ```
 
 #### Token Management Functions
