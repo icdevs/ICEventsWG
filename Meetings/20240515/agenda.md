@@ -10,7 +10,7 @@ Last Weeks meeting: https://youtu.be/0p3aJ0V8MyY
 
 ## 1. Laclan's CBOR Update:
 
-## 3. Austin Allow list update - Do we go generic?
+## 2. Austin Allow list update - Do we go generic?
 
 ## 3. Votes!!!
 
