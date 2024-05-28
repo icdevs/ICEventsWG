@@ -5,7 +5,7 @@
 
 
 
-# ICRC-72: Minimal Event-Driven Pub-Sub Standard
+# ICRC-83: Block Schemas for ICRC-72
 
 ICRC-72, the Minimal Event-Driven Pub-Sub Standard, is designed to establish a robust framework for implementing publish-subscribe messaging patterns on the Internet Computer. This standard facilitates the communication and synchronization of data across different canisters, enabling them to subscribe to and publish events effectively. By formalizing the interactions between publishers, subscribers, and broadcasters, ICRC-72 aims to enhance the interoperability, scalability, and efficiency of decentralized applications on the Internet Computer.
 
@@ -167,7 +167,7 @@ Subscribers MAY register the reciept of a notification with a `72Notification` b
 
 ## Extensions
 
-The ICRC-72 standard may be extended or replaced by other ICRC Standards in the future.
+The ICRC-83 standard may be extended or replaced by other ICRC Standards in the future.
 
 Notification Replay for recovery of missed messages was specifically removed from this ICRC standard to reduce the size and will submitted under ICRC-77 in the future.
 
