@@ -94,3 +94,13 @@ Membership generally only takes a request to be added to the list along with you
 
   Roles:
   - Voting Member
+
+### Meeting Recordings
+
+April 24, 2024 - https://youtu.be/gOhaqMxRhYU (Only Austin's Audio)
+May 1st, 2024 - https://youtu.be/OfheHKSPNw8
+May 8th, 2024 - https://youtu.be/0p3aJ0V8MyY
+May 15th, 2024 - https://youtu.be/0p3aJ0V8MyY
+May 22nd, 2024 - https://youtu.be/CS9cegESnMU
+May 29th, 2024 - https://youtu.be/DjjDakkUMnY
+June 5th, 2024 - https://youtu.be/JsBz_9lxw6g
