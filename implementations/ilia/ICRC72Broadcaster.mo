@@ -15,10 +15,14 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 
+// Raw allow list implementation
 import AllowListManager "./allowlist/AllowListManager";
 import BalanceManager "./balance/BalanceManager";
+
+// For Ethereum calls
 import T "./EthTypes";
 import EthSender "./EventSender";
+
 import Publisher "./publications/PublisherManager";
 import SubscriptionManager "./subscriptions/SubscriptionManager";
 import Types "ICRC72Types";
