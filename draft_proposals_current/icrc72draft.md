@@ -312,7 +312,10 @@ type PublicationInfo {
 }
 
 type PublicationUpdateRequest = {
-    publicationId : nat;
+    publication : variant{
+        id: nat;
+        namespace: text;
+    };
     config : opt [ICRC16Map];
     memo: blob;
 };
@@ -403,7 +406,7 @@ Represents data about a subscription and its statistics.
 
 #### SubscriptionUpdate
 
-- **subscriptionId** (`nat`): Identifier of the subscription to be updated.
+- **subscription** (`variant{id: nat; namespace: text;};`): Identifier of the subscription to be updated.
 - **newConfig** (`opt vec {text, ICRC16}`): Optional new configuration settings to replace or update the existing subscription configurations.
 
 
@@ -440,7 +443,10 @@ type SubscriberInfo {
 };
 
 type SubscriptionUpdate = {
-    subscriptionId : nat;
+    subscription : variant {
+        id: nat;
+        namespace: text;
+    };;
     newConfig : opt vec {text, ICRC16};
     memo: blob;
 };
@@ -831,9 +837,10 @@ Work flow:
 2. Publisher registers as a publisher for the events it will publish with by calling `icrc72_register_publication` and receives back a publicationId from the Orchestrator canister
 3. Publisher will receive broadcaster assignments via a notification that has a data structure as follows:
 
-  - `publicationId`: Nat - Namespace for the notification
+  - `publicationId`: Nat - ID for the notification
   - `broadcasterAdd`: Array[Blob] - optional - principals being added
   - `broadcasterRemove`: Array[Blob] - optional - principals being removed
+
  
  4. The publisher will now be ready to broadcast.
 
@@ -875,7 +882,7 @@ Work flow:
   - `publicationIdsAdd`: Array[Nat] - optional - publications the broadcaster can expect events for.
   - `publicationIdsRemove`: Array[Nat] - optional - publications the broadcaster is no longer responsible for.
   - `subscriptionAdd`: Array[Nat] - optional - subscriptions being added
-  - `subscriptionRemove`: Array[Blob] - optional - subscriptions being removed
+  - `subscriptionRemove`: Array[Nat] - optional - subscriptions being removed
   - `relayAdd`: Array[Array[Nat, Blob]] - optional - subscriptions being added as a relay and the target relay canister
   - `relayRemove`: Array[Nat, Array[Blob]] - optional - subscriptions being removed as a relay and the target relay canister
 
@@ -911,7 +918,7 @@ A subscriber that would like to subscribe to events must register it's subscript
 Workflow:
 
 1. Subscriber registers as a subscriber to the namespace `icrc72:subscriber:sys:{principal as Text}` by calling the icrc72_register_subscription method.
-2. Publisher registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a publicationId from the Orchestrator canister.
+2. Publisher registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator canister.
 3. Publisher will receive a subscription activated message via a notification that has a data structure as follows:
 
   - `subscriptionId`: Array[Nat] - ID of the subscriptions activated
