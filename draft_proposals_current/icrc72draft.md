@@ -561,7 +561,7 @@ type GenericError = {
   message: Text;
 }
 
-type RegisterPublicationError = variant {
+type PublicationRegisterError = variant {
   Unauthorized; //generally unauthorized
   UnauthorizedPublisher : {
     namespace: Namespace; //The publisher is not allowed, Look up config by message: Text;
@@ -570,7 +570,7 @@ type RegisterPublicationError = variant {
   GenericError: GenericError;
 };
 
-type RegisterSubscriptionError = variant {
+type SubscriptionRegisterError = variant {
   Unauthorized; //generally unauthorized
   UnauthorizedSubscriber: {
     namespace: Namespace; //The publisher is not allowed, Look up config by message: Text;
@@ -579,27 +579,27 @@ type RegisterSubscriptionError = variant {
   GenericError: GenericError;
 };
 
-type RegisterPublicationResult = variant {
+type PublicationRegisterResult = variant {
   Ok: nat;
-  Err: RegisterPublicationError;
+  Err: PublicationRegisterError;
 };
 
 
-type RegisterSubscriptionResult = variant {
+type SubscriptionRegisterResult = variant {
   Ok: nat;
-  Err: RegisterSubscriptionError;
+  Err: SubscriptionRegisterError;
 };
 
 
 type UpdatePublicationResult = variant {
   Ok: bool;
-  Err: RegisterPublicationError;
+  Err: PublicationRegisterError;
 };
 
 
-type UpdateSubscriptionResult = variant {
+type SubscriptionUpdateResult = variant {
   Ok: bool;
-  Err: RegisterSubscriptionError;
+  Err: SubscriptionRegisterError;
 };
 
 ```
@@ -607,11 +607,11 @@ type UpdateSubscriptionResult = variant {
 ```candid "Methods" +=
 // Register new publications with configurations provided by the caller.
 // Returns a vector of results, which may contain either an ID of the registered publication or an error.
-icrc72_register_publication : (vec PublicationRegistration) -> (vec RegisterPublicationResult);
+icrc72_register_publication : (vec PublicationRegistration) -> (vec PublicationRegisterResult);
 
 // Register new subscriptions with configurations provided by the caller.
 // Returns a vector of results, which may contain either an ID of the registered subscription or an error.
-icrc72_register_subscription : (vec SubscriptionRegistration) -> (vec RegisterSubscriptionResult);
+icrc72_register_subscription : (vec SubscriptionRegistration) -> (vec SubscriptionRegisterResult);
 
 // Update existing publications based on provided configurations.
 // Returns a vector of results, indicating success or providing an error detail for each publication update.
