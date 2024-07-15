@@ -139,6 +139,10 @@ The following items SHOULD be used for the indicated patterns:
  * `icrc72:publication:subscribers:disallowed:list`: Array([#Blob(PrincipalAsBlob])
  * `icrc72:publication:subscribers:allowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
  * `icrc72:publication:subscribers:disallowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
+ * `icrc72:publication:controllers:add` : Array([#Blob(PrincipalAsBlob]);
+ * `icrc72:publication:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
+
+
 
 Appendix: [Move allow and disallow to config. Move modes to config](https://github.com/icdevs/ICEventsWG/issues/18)
 
@@ -151,6 +155,8 @@ The following items SHOULD be used for the indicated patterns:
  * `icrc72:subscription:skip`: Array[Nat, Nat]; Get every Xth message with an optional offset.
  * `icrc72:subscription:filter`: Text; The ICRC16 Path filter
  * `icrc72:subscription:stopped`: Bool; Do you want the subscription started upon registration;
+ * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi canister round-robin subscriptions where you need an array of handlers.
+ * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
 
 ### Statistics
 
@@ -837,12 +843,34 @@ Work flow:
 2. Publisher registers as a publisher for the events it will publish with by calling `icrc72_register_publication` and receives back a publicationId from the Orchestrator canister
 3. Publisher will receive broadcaster assignments via a notification that has a data structure as follows:
 
-  - `publicationId`: Nat - ID for the notification
-  - `broadcasterAdd`: Array[Blob] - optional - principals being added
-  - `broadcasterRemove`: Array[Blob] - optional - principals being removed
+  - `icrc72:publication:broadcaster:add`: #Array[(Nat, Blob)] - ID of the publication and broadcaster to broadcast to
+  - `icrc72:publication:broadcaster:remove`: #Array(Nat) - ID for the notification
+  - `icrc72:publication:broadcaster:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the publication for which the error occurred
 
  
  4. The publisher will now be ready to broadcast.
+
+ ### Event Structures
+
+ Subscription Activated:
+
+ ```
+  #Map([
+    ("icrc72:publicatioN:broadcaster:add": #Array([#Nat(123),#Blob([83...28])]))
+  ])
+ ```
+ 
+ Error :
+
+ ```
+  #Map([
+    ("icrc72:publication:broadcaster:error": #Array([#Map([
+      ("error", #Text("Subnet not available"),
+      ("id", #Nat(123)),
+      ("code", #Nat(2)))
+    ])]))
+  ])
+ ```
 
  [Flow](https://mermaid.live/edit#pako:eNp9kkFv4jAQhf-KNadWShFOCiQ-VCr00kN3q-W2ilRNnQlYInZqO9KyiP9em0AKKru5OMq8-eaN83YgTUUgwNFHR1rSk8KVxabULDwtWq-kalF79tq9M3Tx2Ci3Jvtd8dPKdZTEk5y36M0V1XwRNXNrsJLofAT1okC-e3iIzYIpaeUsfbO0UlHy5rp3J61qvTL6pi-K9uREuK0Trapue04kDKAlbWp2wsTByIY-VhvL_gXrWVeIg3P26Jxa6Ya0v5DNF-JY6i9LYnTNvLlc-nrH8mzRby3nnv53W-3X2BuNDbkWJSVMGl2r1fktBULgCPaLfGcv7T4_Xeqix-O_P1vc9aL5YkB91dgP41V95EECDdkGVRWytotdJfg1NVSCCK8V1dhtfAml3gcpdt4st1qCqHHjKIGurdCfsjl8pUqFiL30AT7kOIGQMRA7-AMiHU9G0xkv8rzIeDHLEtiCuEtTPuJTnuV5lo7vec73Cfw1JkD5KM0n42nBeTZLJ8UkPcB-H2qHgftPcrkNog)
 
@@ -879,16 +907,19 @@ Work flow:
 1. Broadcaster registers as a subscriber to the namespace `icrc72:broadcaster:sys:{principal as Text}` by calling the icrc72_register_subscription method.
 2. Broadcaster will receive broadcaster assignments via a notification that has a data structure as follows:
 
-  - `publicationIdsAdd`: Array[Nat] - optional - publications the broadcaster can expect events for.
-  - `publicationIdsRemove`: Array[Nat] - optional - publications the broadcaster is no longer responsible for.
-  - `subscriptionAdd`: Array[Nat] - optional - subscriptions being added
-  - `subscriptionRemove`: Array[Nat] - optional - subscriptions being removed
-  - `relayAdd`: Array[Array[Nat, Blob]] - optional - subscriptions being added as a relay and the target relay canister
-  - `relayRemove`: Array[Nat, Array[Blob]] - optional - subscriptions being removed as a relay and the target relay canister
+  - `icrc72:publication:add`: Array[Nat] - optional - publications the broadcaster can expect events for.
+  - `icrc72:publication:remove`: Array[Nat] - optional - publications the broadcaster is no longer responsible for.
+  - `icrc72:subscription:add`: Array[Nat] - optional - subscriptions being added
+  - `icrc72:subscription:remove`: Array[Nat] - optional - subscriptions being removed
+  - `icrc72:relay:add`: Array[Array[Nat, Blob]] - optional - subscriptions being added as a relay and the target relay canister
+  - `icrc72:relay:remove`: Array[Array[Nat,Blob]] - optional - subscriptions being removed as a relay and the target relay canisters to remove
 
 3. Once the broadcaster receives an event, it needs to pull the needed data from the Orchestrator canister that it needs to fulfill its job. This includes pulling publication info and subscription info.
  
- 4. The broadcaster will now be ready to relay notifications.
+ 
+ 4. The subscriber will now start receiving events unless an error has occured
+
+ 
 
 [Flow](https://mermaid.live/edit#pako:eNqFklFrwjAQx79KuOcqpl21zYOwdnuUDWQgoy9nE2vAJi5Jx5z43Ze2Ticqy0Mv9P_7312420OpuQAGVnw0QpXiSWJlsC4U8WeLxslSblE58mLKNUHbRWGdQafNNZXlLZMZjbxE68QN5LVZtowPG2nXt4h5T_hgSyOXd5DFJbPoof7bNjmYTrOckUdrZaXO5Qgq_sdGnL5u18NH96-Nk-dPoZzt9Sz3ss_BztZev5QXd3QvDY75c61W0tRkJqzFSqrqRCz-QXwRD7QPZeRty9GJvgSZO2z7hABqYWqU3E9333oKcGtRiwKYv3KxwmbjCijUwaPYOD3fqRLYCjdWBNB0KY_bcPoruPRjn_Ur021OAH4ewPbwBSwcxcPxhKZJkkY0nUQB7IANwpAO6ZhGSRKFowea0EMA31r7pHQYJvFonFIaTcI4jcMu2XundQUPP-zX2M8)
 
@@ -918,12 +949,35 @@ A subscriber that would like to subscribe to events must register it's subscript
 Workflow:
 
 1. Subscriber registers as a subscriber to the namespace `icrc72:subscriber:sys:{principal as Text}` by calling the icrc72_register_subscription method.
-2. Publisher registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator canister.
-3. Publisher will receive a subscription activated message via a notification that has a data structure as follows:
+2. Subscriber registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator canister.
+3. Subscriber will receive a subscription activated message via a notification that has a data structure as follows:
 
-  - `subscriptionId`: Array[Nat] - ID of the subscriptions activated
+  - `icrc72:subscription:activated`: Array[Nat] - ID of the subscriptions activated
+  - `icrc72:subscription:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the subscriptions for which the error occurred
  
- 4. The subscriber will now start receiving events.
+ 4. The subscriber will now start receiving events unless an error has occured
+
+ ### Event Structures
+
+ Subscription Activated:
+
+ ```
+  #Map([
+    ("icrc72:subscription:activated": #Array([#Nat(123),#Nat(456)]))
+  ])
+ ```
+ 
+ Error :
+
+ ```
+  #Map([
+    ("icrc72:subscription:error": #Array([#Map([
+      ("error", #Text("Subnet not available"),
+      ("id", #Nat(123)),
+      ("code", #Nat(2)))
+    ])]))
+  ])
+ ```
 
 
 [Flow](https://mermaid.live/edit#pako:eNptkV9PgzAUxb8KuU-asGUFGX8elgjzwQc10TdDsnTlwpqMFttinMu-uy2MaTJ5oKQ993dOOUdgskLIQONHj4LhmtNG0bYUnn06qgxnvKPCeG_91qPaLZopvkV1LXlRbOc0bkVtFDXyH1VeOE2uJK0Y1WYCjW-Ln61WDpB5nCkWBxuFDXeyjR6tO8OluBG0Rd1Rhr7HpKh5czsC3OjMIiwo817R9EpMmYdB73H9RzhZ3WvNG3Ed6izKC8caY1z9gby4-D18or3gszS85ow6O_17rTOncGlVO5xaKEObqxTgQ4t2l1e2i6MbKsHssMUSMvtZYU37vSmhFCcrpb2RbwfBIKvpXqMPfVdRM3V32cWK2waexoKHnn2wFUB2hC_IgkU0X8YkTZI0JGkc-nCAbBYEZE6WJEySMFjckYScfPiW0kLJPEiixTIlJIyDKI2CAfY-nA2Gpx_Mnb-p)
