@@ -154,7 +154,7 @@ The following items SHOULD be used for the indicated patterns:
 
 ### Statistics
 
-Certain query endpoints MAY provide statistics for the requested items.
+For statistics please se ICRC-92.
 
 ### Event Data Types
 
@@ -186,15 +186,8 @@ let event = {
 
 #### EventRelay
 
-When a broadcaster identifies that certain events should be relayed to other subnets it will use an EventRelay Object to pass the event across a subnet boundary.
+When a broadcaster identifies that certain events should be relayed to other subnets it will use an Event  Object to pass the event across a subnet boundary.
 
-- **id** (`nat`): A unique identifier for the event, allowing for distinct referencing across an event namespace.
-- **prevId** (`opt nat`): A unique identifier for the previous event if applicable.
-- **timestamp** (`nat`): The Unix epoch timestamp indicating when the event relay was initiated.
-- **namespace** (`text`): The categorization label which helps in grouping similar relay events.
-- **source** (`principal`): The principal identifier of the canister that originally published the event.
-- **data** (`ICRC16`): The data carried by the event, structured as per ICRC-16 standards for interoperability and consistency across different systems.
-- **header** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 
 #### EventNotification
 
@@ -236,19 +229,11 @@ let eventNotification = {
     timestamp: nat
     namespace: text;
     data: ICRC16;
+    source: principal;
     headers: ?ICRC16Map
   };
 
-  
-  type EventRelay{
-    id: Nat
-    prevId: opt nat;
-    timestamp: nat
-    namespace: text;
-    source: principal;
-    data: ICRC16;
-    headers: ?ICRC16Map
-  };
+
 
   type EventNotification{
     id: nat;
@@ -320,8 +305,6 @@ type PublicationRegistration {
   memo: blob;
 };
 
-Appendix: [Allowed Publishers and subscribers should use the config](https://github.com/icdevs/ICEventsWG/issues/18)
-
 type PublicationInfo {
   namespace: text;
   config: [ICRC16Map];
@@ -333,36 +316,12 @@ type PublicationUpdateRequest = {
     config : opt [ICRC16Map];
     memo: blob;
 };
-```
 
-Appendix: [Memo and created at time discussion](https://github.com/icdevs/ICEventsWG/issues/35)
-
-##### Formally recognized stats values.  
-
-Non-exclusive. Implementations may add other stats specific to their implementation.
-
-* `icrc72:publication:stats:publishers`- #Nat; the number of canisters registered as a publisher for this event
-* `icrc72:publication:stats:events`- #Nat; the number of events that have been published
-* `icrc72:publication:stats:events:sent`- #Nat; the number of events that have been completely sent
-* `icrc72:publication:stats:notifications`- #Nat; the number of notifications sent
-* `icrc72:publication:stats:confirmations`- #Nat;  the number confirmations received from subscribers
-
-```
 type PublisherInfo {
   publisher: principal;
   stats: [Map];
 };
-```
 
-#### Formally recognized stats values.  
-
-Non-exclusive. Implementations may add other stats specific to their implementation.
-
-* `icrc72:publisher:stats:publications`- #Nat; the number of publications being published by the Publisher
-* `icrc72:publisher:stats:cyclesReceived`- #Nat; the number of cycles sent by the system
-* `icrc72:publisher:stats:events`- #Nat; the number of events the publisher has sent
-
-```
 //broken down by namespace
 type PublisherPublicationInfo {
   publisher: principal;
@@ -372,13 +331,10 @@ type PublisherPublicationInfo {
 };
 ```
 
-#### Formally recognized stats values.  
+Appendix: [Allowed Publishers and subscribers should use the config](https://github.com/icdevs/ICEventsWG/issues/18)
 
-Non-exclusive. Implementations may add other stats specific to their implementation.
+Appendix: [Memo and created at time discussion](https://github.com/icdevs/ICEventsWG/issues/35)
 
-* `icrc72:publisher:stats:publications`- #Nat; the number of publications being published by the Publisher
-* `icrc72:publisher:stats:cyclesReceived`- #Nat; the number of cycles sent by the system
-* `icrc72:publisher:stats:events`- #Nat; the number of events the publisher has sent
 
 ### Subscription Data Types
 
@@ -467,19 +423,7 @@ type SubscriberSubscriptionInfo {
   config: vec ICRC16Map;
   stats: vec ICRC16Map;
 };
-```
 
-#### Formally recognized stats values.  
-
-Non-exclusive. Implementations may add other stats specific to their implementation.
-
-* `icrc72:subscriber_subscription:stats:subscriptions:active`- #Nat; the number of subscriptions the subscriber has registered and active.
-* `icrc72:subscriber_subscription:stats:notifications`- #Nat; the number of notifications the subscriber has been sent
-* `icrc72:subscriber_subscription:stats:confirmations`- #Nat; the number of confirmations the subscriber has sent
-* `icrc72:subscriber_subscription:stats:cyclesPaid`- #Nat; the number of cycles the subscriber has paid upon confirmation
-* `icrc76:subscriber_subscription:stats:requests`- #Nat; the number of message requests the subscriber has sent
-
-```  candid "Type definitions" +=
 
 type SubscriptionInfo {
   subscriptionId: Nat;
@@ -490,43 +434,11 @@ type SubscriptionInfo {
   stats: vec ICRC16Map;
 };
 
-```
-
-#### Formally recognized stats values.  
-
-Non-exclusive. Implementations may add other stats specific to their implementation.
-
-* `icrc72:subscription:stats:subscribers`- #Nat; the number of subscriptions the subscriber has registered.
-* `icrc72:subscription:stats:notifications`- #Nat; the number of notifications sent to the subscription
-* `icrc72:subscription:stats:confirmations`- #Nat; the number of confirmations subscription has sent.
-* `icrc72:subscription:stats:notifications`- #Nat; the number of notifications sent
-* `icrc72:subscription:stats:confirmations`- #Nat;  the number confirmations received from subscribers
-* `icrc72:subscription:stats:cyclesPaid`- #Nat; the number of cycles the subscriber has paid upon confirmation
-* `icrc76:subscription:stats:requests`- #Nat; the number of message requests the subscriber has sent
-
-```candid "Type definitions" +=
-
 type SubscriberInfo {
   subscriber: Nat;
   stats: vec ICRC16Map;
 };
 
-```
-
-#### Formally recognized stats values.  
-
-Non-exclusive. Implementations may add other stats specific to their implementation.
-
-* `icrc72:subscriber:stats:subscriptions`- #Nat; the number of subscriptions the subscriber has registered.
-* `icrc72:subscriber:stats:notifications`- #Nat; the number of notifications sent to the subscription
-* `icrc72:subscriber:stats:confirmations`- #Nat; the number of confirmations subscription has sent.
-* `icrc72:subscriber:stats:notifications`- #Nat; the number of notifications sent
-* `icrc72:subscriber:stats:confirmations`- #Nat;  the number confirmations received from subscribers
-* `icrc72:subscriber:stats:cyclesPaid`- #Nat; the number of cycles the subscriber has paid upon confirmation
-* `icrc76:subscriber:stats:requests`- #Nat; the number of message requests the subscriber has sent
-
-
-```candid "Type definitions" +=
 type SubscriptionUpdate = {
     subscriptionId : nat;
     newConfig : opt vec {text, ICRC16};
@@ -798,14 +710,7 @@ These functions define the capabilities of a broadcaster canister in the pub-sub
 - **Type**: Update method
 - **Parameters**: A vector of `Event` records.
 - **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing message identifiers, or an error as `PublishError`.
-- **Summary**: Accepts a list of events from publishers and attempts to process and distribute these events to relevant subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process.
-
-#### icrc72_publish_relay
-
-- **Type**: Update method
-- **Parameters**: A vector of `EventRelay` records.
-- **Returns**: A vector of option types either showing success with a vector of `nat` for message identifiers, or a `PublishError`.
-- **Summary**: Handles the reception and broadcasting of events relayed from other subnets or broadcasters. This method ensures the continuation of the event propagation across different subnets maintaining the integrity and order specified by the `EventRelay` structure.
+- **Summary**: Accepts a list of events from publishers and attempts to process and distribute these events to relevant subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: Relays will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relay and care should be taken to validate the sender.
 
 #### icrc72_confirm_messages
 
@@ -830,10 +735,6 @@ icrc72_publish(vec Event) : vec opt variant{
   #Err: PublishError;
 };
 
-icrc72_publish_relay(vec EventRelay) : vec opt variant{
-  #Ok: vec Nat;
-  #Err: PublishError;
-};
 
 icrc72_confirm_messages(vec nat) -> variant{
   allAccepted;
@@ -1048,6 +949,10 @@ Notification Replay for recovery of missed messages was specifically removed fro
 ### ICRC-83 Block Schema
 
 Transaction Logs are not required for ICRC-72 implementation, but maybe added for transparency.  The proposed block schemas are handled in an extension to ICRC-72 in ICRC-83.
+
+### ICRC-92 Statistics Definition and Collection for Event Utility
+
+ICRC-72 provides no official set of statistics but recommendations for namespaces and default statistics are suggested in ICRC-92.
 
 ## Transaction Deduplication
 

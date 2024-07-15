@@ -32,7 +32,7 @@ The ICRC-72 Standard follows the ICRC-3 block schema definitions for basic block
   - `namespace`: Text - The namespace of the publication.
   - `config`: Map - optional - Configuration settings for the publication.
   - `memo`: Blob - optional - A memo field for including additional unstructured data.
-  - `publicationId` - ID assigned by the system to the subscription.
+  - `pubId` - ID assigned by the system to the subscription.
 
   Publication registration updates are filed as additional 72PubReg methods.
 
@@ -43,7 +43,7 @@ The ICRC-72 Standard follows the ICRC-3 block schema definitions for basic block
   - `namespace`: Text - The namespace to which the subscription relates.
   - `config`: Map - optional Subscription-specific configuration settings.
   - `memo` : Blob - A memo field for including additional unstructured data.
-  - `subscriptionId` - ID assigned by the system to the subscription.
+  - `subId` - ID assigned by the system to the subscription.
 
   Subscription registration updates are filed as additional 72SubReg methods.
 
@@ -51,7 +51,7 @@ The ICRC-72 Standard follows the ICRC-3 block schema definitions for basic block
 
 - **Type**: `72BroadcasterAssign`
 - **Fields**:
-  - `publicationId`: Nat - The identifier of the publication.
+  - `pubId`: Nat - The identifier of the publication.
   - `broadcaster`: Blob - The principal of the assigned broadcaster.
   - `action` : Text - `activate`, `deactviate`
 
@@ -65,7 +65,7 @@ The ICRC-72 Standard follows the ICRC-3 block schema definitions for basic block
 
 - **Type**: `72SubscriptionAssign`
 - **Fields**:
-  - `subscriptionId`: Nat - The identifier of the subscription.
+  - `subId`: Nat - The identifier of the subscription.
   - `broadcaster`: Blob - The principal of the assigned broadcaster.
   - `action` : Text - `activate`, `deactviate`
 
@@ -73,7 +73,7 @@ The ICRC-72 Standard follows the ICRC-3 block schema definitions for basic block
 
 - **Type**: `72RelayAssign`
 - **Fields**:
-  - `publicationId`: Nat - The identifier of the subscription.
+  - `pubId`: Nat - The identifier of the subscription.
   - `broadcaster`: Blob - The principal of the assigned broadcaster.
   - `relay`: Blob - The principal of the assigned relay.
   - `action` : Text - `activate`, `deactviate`
@@ -148,13 +148,13 @@ Subscribers MAY register the reciept of a notification with a `72Notification` b
 - **Fields**:
   - `namespace`: Text - The namespace to which the subscription relates.
   - `config`: Map - optional Subscription-specific configuration settings.
-  - `subscriptionId` - ID assigned by the system to the subscription.
+  - `subId` - ID assigned by the system to the subscription.
 
 #### 72SubscriptionRemove - Remove a subscription from a broadcaster
 
 - **Type**: `72SubscriptionRemoved`
 - **Fields**:
-  - `subscriptionId` - ID assigned by the system to the subscription.
+  - `subId` - ID assigned by the system to the subscription.
 
 #### 72RelayAssign - Assignment of a relay to a broadcaster
 
