@@ -311,13 +311,13 @@ type PublicationRegistration {
   memo: blob;
 };
 
-type PublicationInfo {
+type PublicationInfo = record {
   namespace: text;
   config: [ICRC16Map];
   stats: [Map];
 }
 
-type PublicationUpdateRequest = {
+type PublicationUpdateRequest = record {
     publication : variant{
         id: nat;
         namespace: text;
@@ -326,13 +326,13 @@ type PublicationUpdateRequest = {
     memo: blob;
 };
 
-type PublisherInfo {
+type PublisherInfo = record {
   publisher: principal;
   stats: [Map];
 };
 
 //broken down by namespace
-type PublisherPublicationInfo {
+type PublisherPublicationInfo = record {
   publisher: principal;
   namespace: principal;
   config: [ICRC16Map];
@@ -357,10 +357,7 @@ A subscriber MAY provide a filter in textual representation to filter out certai
 
 #### Skipping records
 
-A subscriber MAY provide a skip config to ask the canister to skip broadcasting for either bandwidth or distribution reasons.   The skip parameter is a tuple of the mod and optional offset `Array[Nat, opt nat]`.  If the mod is set then the subscriber should only receive a message if the mod of the value provided is 0.  This can be offset for partitioning by using the optional partition variable.  By using this pattern a subscriber set can ensure that all messages make it to a set of subscribers with a distributed message set. 
-
-- **nat** (`nat`): The modulus value for determining which messages to skip. For example, a value of 5 means every 5th message is considered.
-- **opt nat** (`?nat`): An optional offset that adjusts which messages are skipped, further refining the control over message selection in large streams.
+A subscriber MAY provide a skip config to ask the canister to skip broadcasting for either bandwidth or distribution reasons.   The skip parameter is a tuple of the mod and optional offset `Array[Nat, opt Nat]`.  If the mod is set then the subscriber should only receive a message if the mod of the value provided is 0.  This can be offset for partitioning by using the optional partition variable.  By using this pattern a subscriber set can ensure that all messages make it to a set of subscribers with a distributed message set. 
 
 #### SubscriptionRegistration
 
@@ -372,7 +369,7 @@ Sent by a subscriber to an Orchestrator canister to register the desire to start
 
 ```candid
 // Register a new event publication with specific configurations
-let subscriptionRegistration = {
+let subscriptionRegistration = record {
   namespace: "com.example.myapp.events";
   config: [
     ("icrc72:subscription:skip", #Array([#Nat(5),#Nat(1)])),
@@ -406,27 +403,27 @@ Represents data about a subscription and its statistics.
 - **subscriber** (`principal`): The principal ID of the entity subscribed to the events.
 - **namespace** (`text`): The namespace pertaining to the subscribed events.
 - **config** (`vec ICRC16Map`): Configuration settings specific to the subscriber, which may include filters and skip details.
-- **filter** (`?Text`): A potential textual filter that further refines what events the subscriber receives based on content or type.
-- **skip** (`?Skip`): Defines if and how certain events are skipped during the subscription period, optimizing the flow of information.
 - **stats** (`vec ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
 
 #### SubscriptionUpdate
 
 - **subscription** (`variant{id: nat; namespace: text;};`): Identifier of the subscription to be updated.
-- **newConfig** (`opt vec {text, ICRC16}`): Optional new configuration settings to replace or update the existing subscription configurations.
+- **config** (`opt vec {text, ICRC16}`): Optional new configuration settings to replace or update the existing subscription configurations.
+- **memo** (opt blob): optional memo for record keeping
+- **subscriber** (opt principal) : optional subscriber record to change.  Controllers can change anyone, subscribers can controllers themselves
 
 
 ``` candid "Type definitions" +=
-type Skip = record {nat; opt nat};
 
-type SubscriptionRegistration {
+type SubscriptionRegistration = record {
   namespace: text;
+  config: vec record{text; ICRC16};
   memo: blob
 };
 ```
 
 ``` candid "Type definitions" +=
-type SubscriberSubscriptionInfo {
+type SubscriberSubscriptionInfo = record {
   subscriptionId : nat;
   subscriber: principal;
   config: vec ICRC16Map;
@@ -434,21 +431,19 @@ type SubscriberSubscriptionInfo {
 };
 
 
-type SubscriptionInfo {
+type SubscriptionInfo = record {
   subscriptionId: Nat;
   namespace: text;
   config: vec ICRC16Map;
-  filter: ?Text; 
-  skip: ?Skip;
   stats: vec ICRC16Map;
 };
 
-type SubscriberInfo {
+type SubscriberInfo = record {
   subscriber: Nat;
   stats: vec ICRC16Map;
 };
 
-type SubscriptionUpdate = {
+type SubscriptionUpdate = record {
     subscription : variant {
         id: nat;
         namespace: text;
@@ -480,7 +475,7 @@ Generally pub/sub should be ONLY intercanister methods. If you want to publish a
 
 ```candid "Types" +=
 
-type GenericError = {
+type GenericError = record {
   error_code: Nat;
   message: Text;
 }
@@ -503,25 +498,25 @@ type SubscriptionRegisterError = variant {
   GenericError: GenericError;
 };
 
-type PublicationRegisterResult = variant {
+type PublicationRegisterResult = opt variant {
   Ok: nat;
   Err: PublicationRegisterError;
 };
 
 
-type SubscriptionRegisterResult = variant {
+type SubscriptionRegisterResult = opt variant {
   Ok: nat;
   Err: SubscriptionRegisterError;
 };
 
 
-type UpdatePublicationResult = variant {
+type UpdatePublicationResult = opt variant {
   Ok: bool;
   Err: PublicationRegisterError;
 };
 
 
-type SubscriptionUpdateResult = variant {
+type SubscriptionUpdateResult = opt variant {
   Ok: bool;
   Err: SubscriptionRegisterError;
 };

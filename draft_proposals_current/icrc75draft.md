@@ -26,7 +26,7 @@ The `Principal` is a type intrinsic to the Internet Computer, providing a secure
 An account in ICRC-75 is similar to an ICRC-1 Account type.
 
 ```candid
-type Account = {
+type Account = record {
   owner: Principal;
   subaccount: Blob
 };
@@ -334,7 +334,7 @@ Allows retrieval of lists in a pageable fashion, making it scalable for environm
 If the filter is provided then only items that start with the provided text should be retrieved.
 
 ```candid
-type ListRecord = {
+type ListRecord = record {
   namespace: Text;
   metadata: ?Map;
 }
