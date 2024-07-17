@@ -106,3 +106,4 @@ Membership generally only takes a request to be added to the list along with you
 - June 5th, 2024 - https://youtu.be/JsBz_9lxw6g
 - June 26th, 2024 - https://youtu.be/-gS42piwJm8
 - July 3rd, 2024 - https://youtu.be/iR8hvKD0Rhw
+- July 10th, 2024 - https://youtu.be/3AwCxmtlQXQ

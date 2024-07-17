@@ -305,7 +305,13 @@ Represents a particular publication namespace, publisher tuple and any statistic
 - **stats** (`[Map]`): Detailed metrics related to publications in the specified namespace by the publisher.
 
 ``` candid "Type definitions" += 
-type PublicationRegistration {
+
+type PublicationIdentifier = variant {
+  namespace: text;
+  publicationId: nat;
+};
+
+type PublicationRegistration = {
   namespace: text;
   config: [ICRC16Map];
   memo: blob;
@@ -313,15 +319,13 @@ type PublicationRegistration {
 
 type PublicationInfo = record {
   namespace: text;
+  publicationId: nat;
   config: [ICRC16Map];
   stats: [Map];
 }
 
 type PublicationUpdateRequest = record {
-    publication : variant{
-        id: nat;
-        namespace: text;
-    };
+    publication : PublicationIdentifier;
     config : opt [ICRC16Map];
     memo: blob;
 };
@@ -334,7 +338,8 @@ type PublisherInfo = record {
 //broken down by namespace
 type PublisherPublicationInfo = record {
   publisher: principal;
-  namespace: principal;
+  namespace: text;
+  publicationId: nat;
   config: [ICRC16Map];
   stats: [Map];
 };
@@ -423,6 +428,13 @@ type SubscriptionRegistration = record {
 ```
 
 ``` candid "Type definitions" +=
+
+ type SubscriptionIdentifier = variant{
+    namespace: text;
+    subscriptionId: nat;
+  };
+
+
 type SubscriberSubscriptionInfo = record {
   subscriptionId : nat;
   subscriber: principal;
@@ -439,7 +451,7 @@ type SubscriptionInfo = record {
 };
 
 type SubscriberInfo = record {
-  subscriber: Nat;
+  subscriber: principal;
   stats: vec ICRC16Map;
 };
 
@@ -575,7 +587,7 @@ Fetches information about registered publications in a paginated format, optiona
 Provides a paginated list of publishers associated with a specific publication namespace. Includes statistical data based on filters.
 
 - **Parameters**:
-  - `namespace`: Specifies the publication namespace for which publisher data is requested.
+  - `publication`: Specifies the publication namespace or id. Type PublicationIdentifier.
   - `prev`: Optional. Principal of the last publisher in the previous set for pagination.
   - `take`: Optional. Number of entries to return.
   - `statsFilter`: Optional. Filters to specify which statistical data to return.
@@ -633,17 +645,18 @@ Fetches broadcaster information associated with a specific publication namespace
 - **Returns**:
   - A list of `BroadcasterInfo` detailing broadcasters associated with the specified publication and their statistics.
 
-#### icrc72_get_broadcaster_subscriptions
+#### icrc72_get_subscription_broadcasters
 
-Provides subscription data associated with a specific broadcaster, supports pagination and the use of statistical filters.
+Provides broadcaster data associated with a specific subscription, supports pagination and the use of statistical filters.
 
 - **Parameters**:
+  - `subscription`: Identifer for the subscription by id or namespace `SubscriptionIdentifier`.
   - `prev`: Optional. The principal of the last subscriber in the previous list for continued pagination.
   - `take`: Optional. The number of subscription entries to return.
   - `statsFilter`: Optional. Filters for retrieving specific statistical information.
 
 - **Returns**:
-  - A list of `SubscriptionInfo` detailing subscriptions managed by the specified broadcaster and their statistics.
+  - A list of `BroadcasterInfo` detailing broadcasters managing by the specified subscription and their statistics.
 
 ```candid "Methods" +=
 
@@ -663,7 +676,7 @@ icrc72_get_publications({
 
 //get publications known to the Orchestrator canister
 icrc72_get_publication_publishers({
-  namespace: text;
+  publication: PublicationIdentifier;
   prev: opt principal;
   take: opt nat;
   statsFilter: ??(vec map);
@@ -682,7 +695,6 @@ icrc72_get_subscriptions({
   statsFilter: ??(vec map);
 }) -> query vec SubscriptionInfo;
 
-icrc72_get_subscription(vec nat) -> query vec ?SubscriptionInfo;
 
 icrc72_get_broadcasters({
   prev: opt principal;
@@ -691,20 +703,30 @@ icrc72_get_broadcasters({
 }) -> query vec BroadcasterInfo;
 
 icrc72_get_publication_broadcasters({
-  namespace: text;
+  publication: PublicationIdentifier;
   prev: opt principal;
   take: opt nat;
   statsFilter: ??(vec map);
 }) -> query vec BroadcasterInfo;
 
 icrc72_get_broadcaster_subscriptions({
+  broadcaster: principal
   prev: opt principal;
   take: opt nat;
   statsFilter: ??(vec map);
 }) -> query vec SubscriptionInfo;
 ```
 
-Missing: get_subscriber_subscriptions, icrc72_get_subscription
+Missing: 
+icrc72_get_subscription_subscribers
+icrc72_get_subscription_publishers
+icrc72_get_subscription_broadcasters
+icrc72_get_publication_subscribers
+icrc72_get_broadcaster_publishers
+icrc72_get_broadcaster_subscribers
+icrc72_get_broadcaster_relays
+icrc72_get_subscriber_broadcaster
+icrc72_get_publisher_broadcasters
 
 ## Broadcaster Canister
 
