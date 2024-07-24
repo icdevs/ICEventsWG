@@ -499,6 +499,7 @@ type PublicationRegisterError = variant {
   };
   ImproperConfig: Text; //maybe implementation specific
   GenericError: GenericError;
+  GenericBatchError : Text;
 };
 
 type SubscriptionRegisterError = variant {
@@ -508,6 +509,7 @@ type SubscriptionRegisterError = variant {
   };
   ImproperConfig: Text;  //maybe implementation specific
   GenericError: GenericError;
+  GenericBatchError : Text;
 };
 
 type PublicationRegisterResult = opt variant {
@@ -557,6 +559,17 @@ icrc72_update_subscription : (vec SubscriptionUpdate) -> (vec UpdateSubscription
 ### Orchestrator Query Methods
 
 These methods facilitate the orchestration and supervision of the publish/subscribe system’s state without altering any data.
+
+#### icrc72_get_valid_broadcasters
+
+Retrieves a details about which broadcasters a subscriber should allow notifications from. This is an update call because it may need to check the subnet of the caller as well as because we want it to go through consensus since it has to do with security.
+
+- **Parameters**:
+  none
+
+- **Returns**:
+  - A variant of `list` which is a  `vec principals` which the subscriber should accept notifications from.
+  - or variant `icrc75` which is a `ICRC75Item` that points to a canister and namespace that contains the valid broadcasters
 
 #### icrc72_get_publishers
 
@@ -660,6 +673,18 @@ Provides broadcaster data associated with a specific subscription, supports pagi
 
 ```candid "Methods" +=
 
+type ICRC75Item = record {
+  {
+    principal: principal;
+    namespace: text
+  };
+
+// Returns the publishers known to the Orchestrator canister
+icrc72_get_valid_broadcasters() -> async variant {
+  list : vec principal;
+  icrc75 : ICRC75Item;
+};
+
 // Returns the publishers known to the Orchestrator canister
 icrc72_get_publishers({
   prev: opt principal;
@@ -757,6 +782,7 @@ type PublishError = variant {
   ImproperId: Text;
   Busy; // This Broadcaster is busy at the moment and cannot process requests
   GenericError: GenericError;
+  GenericBatchError : Text;
 };
 
 icrc72_publish(vec Event) : vec opt variant{
@@ -860,9 +886,9 @@ Work flow:
 2. Publisher registers as a publisher for the events it will publish with by calling `icrc72_register_publication` and receives back a publicationId from the Orchestrator canister
 3. Publisher will receive broadcaster assignments via a notification that has a data structure as follows:
 
-  - `icrc72:publication:broadcaster:add`: #Array[(Nat, Blob)] - ID of the publication and broadcaster to broadcast to
-  - `icrc72:publication:broadcaster:remove`: #Array(Nat) - ID for the notification
-  - `icrc72:publication:broadcaster:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the publication for which the error occurred
+  - `icrc72:publisher:broadcaster:add`: #Array[(Nat, Blob)] - ID of the publication and broadcaster to broadcast to
+  - `icrc72:publisher:broadcaster:remove`: #Array(Nat) - ID for the notification
+  - `icrc72:publisher:broadcaster:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the publication for which the error occurred
 
  
  4. The publisher will now be ready to broadcast.
@@ -969,8 +995,9 @@ Workflow:
 2. Subscriber registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator canister.
 3. Subscriber will receive a subscription activated message via a notification that has a data structure as follows:
 
-  - `icrc72:subscription:activated`: Array[Nat] - ID of the subscriptions activated
-  - `icrc72:subscription:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the subscriptions for which the error occurred
+  - `icrc72:subscriber:broadcaster:add`: Array[Nat,Blob] - ID of the subscriptions activated and the the expected broadcasters
+  - `icrc72:subscriber:broadcaster:remove`: Array[Nat,Blob] - ID of the subscriptions activated and the the expected broadcasters
+  - `icrc72:subscriber:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the subscriptions for which the error occurred
  
  4. The subscriber will now start receiving events unless an error has occured
 
@@ -980,7 +1007,9 @@ Workflow:
 
  ```
   #Map([
-    ("icrc72:subscription:activated": #Array([#Nat(123),#Nat(456)]))
+    ("icrc72:subscriber:activated": #Array([
+      #Map([("subscriptionId", #Nat(1230)),("broadcasters", #Array(#Blob("0x12...12)))]),
+      #Map([("subscriptionId", #Nat(456)),("broadcasters", #Array(#Blob("0x12...13)))])]))
   ])
  ```
  
@@ -997,7 +1026,7 @@ Workflow:
  ```
 
 
-[Flow](https://mermaid.live/edit#pako:eNptkV9PgzAUxb8KuU-asGUFGX8elgjzwQc10TdDsnTlwpqMFttinMu-uy2MaTJ5oKQ993dOOUdgskLIQONHj4LhmtNG0bYUnn06qgxnvKPCeG_91qPaLZopvkV1LXlRbOc0bkVtFDXyH1VeOE2uJK0Y1WYCjW-Ln61WDpB5nCkWBxuFDXeyjR6tO8OluBG0Rd1Rhr7HpKh5czsC3OjMIiwo817R9EpMmYdB73H9RzhZ3WvNG3Ed6izKC8caY1z9gby4-D18or3gszS85ow6O_17rTOncGlVO5xaKEObqxTgQ4t2l1e2i6MbKsHssMUSMvtZYU37vSmhFCcrpb2RbwfBIKvpXqMPfVdRM3V32cWK2waexoKHnn2wFUB2hC_IgkU0X8YkTZI0JGkc-nCAbBYEZE6WJEySMFjckYScfPiW0kLJPEiixTIlJIyDKI2CAfY-nA2Gpx_Mnb-p)
+[Flow](https://mermaid.live/edit#pako:eNptkk1vgzAMhv8K8mmTaNXAaIFDpUJ32GGbtN0mpCoNhkYqCUtCta7qf18C_ZI6DgTZj1-_xjkAkyVCChq_OxQMl5zWijaF8OzTUmU44y0Vxvvs1h7V7tBM8TWqe-RdsY1j3InaKGrkP1SWOyZTkpaManMWGt5WfjSfO4HU40yxWbBSWHOHrfTQujVcigdBG9QtZeh7TIqK14-DgCsdWQkrlHofaDolzp77Qu9leQOeWy205rW4N3WCstxpDTbu_sANc00tmOE7arB83qEwA5jlF2N91HuThlecUedLX-c_ieVuLNX0WdudoR2gEOBDgzbKS7u0gysqwGywwQJS-1liRbutKaAQR4vSzsjPvWCQVnSr0YeuLa2r05IvUSy5XdXrcBP6C-GD3RWkB_iBNJhE4-mMJHGchCSZhT7sIR0FARmTKQnjOAwmTyQmRx9-pbSiZBzE0WSaEBLOgiiJgl7sq8_1DY9_MdDNsg)
 
  ![Subscriber Flow](subscriber.png "Subscriber")
 
@@ -1011,6 +1040,7 @@ Workflow:
     Orch-->>Sub: Return Subscription ID
     Orch->>Orch: Assign Broadcaster
     Orch->>BC: Register Subscriber
+    Orch->>BC: SubscriberActivatedEvent
     BC-->>Sub: Event Notifications
     Sub-->>BC: Confirmation Receipt
 ```
