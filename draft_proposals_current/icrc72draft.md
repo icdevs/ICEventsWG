@@ -313,26 +313,26 @@ type PublicationIdentifier = variant {
 
 type PublicationRegistration = {
   namespace: text;
-  config: [ICRC16Map];
+  config: ICRC16Map;
   memo: blob;
 };
 
 type PublicationInfo = record {
   namespace: text;
   publicationId: nat;
-  config: [ICRC16Map];
-  stats: [Map];
+  config: ICRC16Map;
+  stats: ICRC16Map;
 }
 
 type PublicationUpdateRequest = record {
     publication : PublicationIdentifier;
-    config : opt [ICRC16Map];
+    config : opt ICRC16Map;
     memo: blob;
 };
 
 type PublisherInfo = record {
   publisher: principal;
-  stats: [Map];
+  stats: ICRC16Map;
 };
 
 //broken down by namespace
@@ -340,8 +340,8 @@ type PublisherPublicationInfo = record {
   publisher: principal;
   namespace: text;
   publicationId: nat;
-  config: [ICRC16Map];
-  stats: [Map];
+  config: ICRC16Map;
+  stats: ICRC16Map;
 };
 ```
 
@@ -576,9 +576,9 @@ Retrieves a details about which broadcasters a subscriber should allow notificat
 Retrieves a paginated list of publishers known to the Orchestrator canister. Filtering based on provided statistical filters is possible.
 
 - **Parameters**:
-  - `prev`: Optional. The principal of the last publisher in the previous query to establish pagination context.
-  - `take`: Optional. Maximum number of publisher entries to return.
-  - `statsFilter`: Optional. Filters for fetching specific statistical data.
+  - `prev : opt nat`: Optional. The principal of the last publisher in the previous query to establish pagination context.
+  - `take : opt nat`: Optional. Maximum number of publisher entries to return.
+  - `filter : opt OrchestrationFilter`: Optional. Filters for fetching specific slices and statistical data.
 
 - **Returns**:
   - A list of `PublisherInfo` which contains structured information about each known publisher including statistical data.
@@ -588,34 +588,21 @@ Retrieves a paginated list of publishers known to the Orchestrator canister. Fil
 Fetches information about registered publications in a paginated format, optionally filtered by statistical metrics.
 
 - **Parameters**:
-  - `prev`: Optional. The namespace of the last publication fetched which helps in pagination.
-  - `take`: Optional. The number of publication entries to return.
-  - `statsFilter`: Optional. Filters applied to statistical data retrieval for each publication.
+  - `prev : opt nat`: Optional. The namespace of the last publication fetched which helps in pagination.
+  - `take : opt nat`: Optional. The number of publication entries to return.
+  - `filter: opt OrchestrationFilter`: Optional. Filters for fetching slices and statistical data retrieval for each publication.
 
 - **Returns**:
   - A list of `PublicationInfo` detailing each publication’s namespace and associated statistics.
-
-#### icrc72_get_publication_publishers
-
-Provides a paginated list of publishers associated with a specific publication namespace. Includes statistical data based on filters.
-
-- **Parameters**:
-  - `publication`: Specifies the publication namespace or id. Type PublicationIdentifier.
-  - `prev`: Optional. Principal of the last publisher in the previous set for pagination.
-  - `take`: Optional. Number of entries to return.
-  - `statsFilter`: Optional. Filters to specify which statistical data to return.
-
-- **Returns**:
-  - A list of `PublisherPublicationInfo` containing details about publishers for the specified publication namespace and their statistics.
 
 #### icrc72_get_subscribers
 
 Retrieves a list of all subscribers known to the Orchestrator canister, support pagination and statistical filtering.
 
 - **Parameters**:
-  - `prev`: Optional. The principal of the last subscriber in the last fetched list for pagination.
-  - `take`: Optional. The maximum number of subscriber entries to return.
-  - `statsFilter`: Optional. Statistical filters to narrow down the data retrieval.
+  - `prev : opt nat`: Optional. The principal of the last subscriber in the last fetched list for pagination.
+  - `take : opt nat`: Optional. The maximum number of subscriber entries to return.
+  - `filter : opt OrchestrationFilter`: Optional. Statistical filters to narrow down the data retrieval.
 
 - **Returns**:
   - A list of `SubscriberInfo` providing detailed information on each subscriber including their activity statistics.
@@ -625,10 +612,9 @@ Retrieves a list of all subscribers known to the Orchestrator canister, support 
 Fetches details about subscriptions to a specific publication namespace, including optional statistical filtering.
 
 - **Parameters**:
-  - `namespace`: The namespace of the publication for which subscription information is requested.
   - `prev`: Optional. Principal of the last subscriber in previous fetch to continue pagination.
   - `take`: Optional. Number of subscription entries to return.
-  - `statsFilter`: Optional. Filters for retrieving specific statistical data.
+  - `filter`: Optional. Filters for retrieving specific statistical data.
 
 - **Returns**:
   - A list of `SubscriptionInfo` offering detailed data on subscriptions to the specified namespace and their statistics.
@@ -638,46 +624,33 @@ Fetches details about subscriptions to a specific publication namespace, includi
 Returns a list of all broadcasters known to the system, supports pagination and statistical filters.
 
 - **Parameters**:
-  - `prev`: Optional. The principal of the last broadcaster from the previous query result for pagination continuation.
-  - `take`: Optional. The maximum number of broadcaster entries to be returned.
-  - `statsFilter`: Optional. Statistical filters to specify which data to fetch about broadcasters.
+  - `prev : opt nat`: Optional. The principal of the last broadcaster from the previous query result for pagination continuation.
+  - `take : opt nat`: Optional. The maximum number of broadcaster entries to be returned.
+  - `filter : opt OrchestrationFilter`: Optional. Filters to specify which data to fetch about broadcasters.
 
 - **Returns**:
   - A list of `BroadcasterInfo` which provides structured information about each broadcaster including associated statistics.
 
-#### icrc72_get_publication_broadcasters
-
-Fetches broadcaster information associated with a specific publication namespace in a paginated list.
-
-- **Parameters**:
-  - `namespace`: Publication namespace for which broadcaster information is desired.
-  - `prev`: Optional. The principal of the last broadcaster in the previous query for pagination.
-  - `take`: Optional. The maximum number of broadcaster entries to return.
-  - `statsFilter`: Optional. Statistical filters to narrow down broadcaster information.
-
-- **Returns**:
-  - A list of `BroadcasterInfo` detailing broadcasters associated with the specified publication and their statistics.
-
-#### icrc72_get_subscription_broadcasters
-
-Provides broadcaster data associated with a specific subscription, supports pagination and the use of statistical filters.
-
-- **Parameters**:
-  - `subscription`: Identifer for the subscription by id or namespace `SubscriptionIdentifier`.
-  - `prev`: Optional. The principal of the last subscriber in the previous list for continued pagination.
-  - `take`: Optional. The number of subscription entries to return.
-  - `statsFilter`: Optional. Filters for retrieving specific statistical information.
-
-- **Returns**:
-  - A list of `BroadcasterInfo` detailing broadcasters managing by the specified subscription and their statistics.
 
 ```candid "Methods" +=
 
 type ICRC75Item = record {
-  {
     principal: principal;
     namespace: text
   };
+
+type Map = ()
+
+type OrchestrationFilter = record {
+  statistics: opt(opt (vec text)); // null means do not include statistics opt(null) means include all statistics.
+  slice: opt variant {
+    BySubscriber: vec Principal;
+    ByPublisher : vec Principal;
+    ByBroadcaster : vec Principal;
+    ByNamespace : vec Text;
+  }
+
+};
 
 // Returns the publishers known to the Orchestrator canister
 icrc72_get_valid_broadcasters() -> async variant {
@@ -689,69 +662,39 @@ icrc72_get_valid_broadcasters() -> async variant {
 icrc72_get_publishers({
   prev: opt principal;
   take: opt nat;
-  statsFilter: ??(vec map);
+  filter: opt OrchestrationFilter;
 }) -> query vec PublisherInfo;
 
 //get publications known to the Orchestrator canister
 icrc72_get_publications({
   prev: opt text;
   take: opt nat;
-  statsFilter: ??(vec map);
+  filter: opt OrchestrationFilter;
 }) -> query vec PublicationInfo;
 
-//get publications known to the Orchestrator canister
-icrc72_get_publication_publishers({
-  publication: PublicationIdentifier;
-  prev: opt principal;
-  take: opt nat;
-  statsFilter: ??(vec map);
-}) -> query vec PublisherPublicationInfo;
 
 // Returns the subscribers known to the Orchestrator canister
 icrc72_get_subscribers({
   prev: opt principal;
   take: opt nat;
-  statsFilter: ??(vec map);
+  filter: opt OrchestrationFilter;
 }) -> query vec SubscriberInfo;
 
 icrc72_get_subscriptions({
   prev: opt nat;
   take: opt nat;
-  statsFilter: ??(vec map);
+  filter: opt OrchestrationFilter;
 }) -> query vec SubscriptionInfo;
 
 
 icrc72_get_broadcasters({
   prev: opt principal;
   take: opt nat;
-  statsFilter: ??(vec map);
+  filter: opt OrchestrationFilter;
 }) -> query vec BroadcasterInfo;
 
-icrc72_get_publication_broadcasters({
-  publication: PublicationIdentifier;
-  prev: opt principal;
-  take: opt nat;
-  statsFilter: ??(vec map);
-}) -> query vec BroadcasterInfo;
 
-icrc72_get_broadcaster_subscriptions({
-  broadcaster: principal
-  prev: opt principal;
-  take: opt nat;
-  statsFilter: ??(vec map);
-}) -> query vec SubscriptionInfo;
 ```
-
-Missing: 
-icrc72_get_subscription_subscribers
-icrc72_get_subscription_publishers
-icrc72_get_subscription_broadcasters
-icrc72_get_publication_subscribers
-icrc72_get_broadcaster_publishers
-icrc72_get_broadcaster_subscribers
-icrc72_get_broadcaster_relays
-icrc72_get_subscriber_broadcaster
-icrc72_get_publisher_broadcasters
 
 ## Broadcaster Canister
 
@@ -763,15 +706,15 @@ These functions define the capabilities of a broadcaster canister in the pub-sub
 
 - **Type**: Update method
 - **Parameters**: A vector of `Event` records.
-- **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing message identifiers, or an error as `PublishError`.
+- **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing notification identifiers, or an error as `PublishError`.
 - **Summary**: Accepts a list of events from publishers and attempts to process and distribute these events to relevant subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: Relays will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relay and care should be taken to validate the sender.
 
-#### icrc72_confirm_messages
+#### icrc72_confirm_notificationss
 
 - **Type**: Update method
 - **Parameters**: A vector of `nat` representing notifications identifiers.
-- **Returns**: A variant indicating `allAccepted` if all messages are successfully confirmed, or `itemized` with a vector of options detailing individual confirmation results.
-- **Summary**: Used by subscribers to confirm the receipt and processing of messages. It helps in managing message flow and tracking subscriber engagement and reliability. Errors specific to each message confirmation are addressed individually.
+- **Returns**: A variant indicating `allAccepted` if all notifications are successfully confirmed, or `itemized` with a vector of options detailing individual confirmation results.
+- **Summary**: Used by subscribers to confirm the receipt and processing of notifications. It helps in managing notification flow and tracking subscriber engagement and reliability. Errors specific to each notification confirmation are addressed individually.
 
 
 
@@ -786,12 +729,12 @@ type PublishError = variant {
 };
 
 icrc72_publish(vec Event) : vec opt variant{
-  #Ok: vec Nat;
+  #Ok: vec Nat; //notification IDs. - implementation dependent. A service may return ok with an empty vector if it is not practical to return all notification IDs.
   #Err: PublishError;
 };
 
 
-icrc72_confirm_messages(vec nat) -> variant{
+icrc72_confirm_notifications(vec nat) -> variant{
   allAccepted;
   itemized: vec opt variant {
     #Ok; //discussion point: cycles charged?
@@ -828,22 +771,22 @@ icrc72_get_broadcaster_stats : () -> (BroadcasterStats) query;
 #### icrc72_handle_notification
 
 - **Type**: Update method
-- **Parameter**: `message` (type `EventNotification`)
+- **Parameter**: `notification` (type `EventNotification`)
 - **Returns**: `()`
 - **Description**: Accepts an `EventNotification` which encapsulates an event that a subscriber is registered to handle. The function processes the notification in the manner defined by the subscriber canister's logic. This one-shot handling is designed for straightforward notification processes without the need for trust-establishment or additional confirmation from the broadcaster.
 
 #### icrc72_handle_notification_trusted
 
 - **Type**: Update method
-- **Parameter**: `message` (type `EventNotification`)
+- **Parameter**: `notification` (type `EventNotification`)
 - **Returns**: A variant indicating success with an optional value or the error description.
-- **Description**: Similar to `icrc72_handle_notification`, but designed for more sensitive or critical operations where additional trust assurances from the broadcaster are required. The trusted notification handler can process different types of inputs and provide detailed execution feedback. This function is crucial for interactions where the integrity and authenticity of the message are paramount.
+- **Description**: Similar to `icrc72_handle_notification`, but designed for more sensitive or critical operations where additional trust assurances from the broadcaster are required. The trusted notification handler can process different types of inputs and provide detailed execution feedback. This function is crucial for interactions where the integrity and authenticity of the notification are paramount.
   
 ```candid "Methods" +=
 
-icrc72_handle_notification(vec message) : -> () //oneshot
+icrc72_handle_notification(vec notification) : -> () //oneshot
 
-icrc72_handle_notification_trusted(vec message) : -> variant{
+icrc72_handle_notification_trusted(vec notification) : -> variant{
   //discussion point https://github.com/icdevs/ICEventsWG/issues/2#issuecomment-2054079257
   #Ok: Value
   #err: Text;
@@ -876,21 +819,23 @@ Please see the ICRC-7 specifications for the Generally-Applicable Specifications
 
 ## Publisher Life Cycle
 
-A publisher that would like to publish events must register it's publication with the Orchestrator canister.  The Orchestrator canister is responsible for emitting an ICRC-72 event that provides the publisher with its assigned broadcaster canister(s).
+A publisher that would like to publish events must register it's publication with the Orchestrator canister.  The Orchestrator canister is responsible for ensuring a broadcaster exists, notifying the broadcaster, and then the broadcaster will alert the publisher that it is ready to receive events by emitting an ICRC-72 event notification via icrc72_handle_notifications.
 
-This makes each publisher also as subscriber.
+This makes each publisher also as subscriber and there for the publisher should not start broadcasting events until after it has heard from a broadcaster that it is ready to listen.
+
+In order to ensure that the publisher only listens to broadcasters that are overseen by the orchestrator, the publisher should follow the subscriber workflow and query the orchestrator for a list of valid broadcasters before registering publications.
 
 Work flow:
 
-1. Publisher registers as a subscriber to the namespace `icrc72:publisher:sys:{principal as Text}` by calling the icrc72_register_subscription method.
-2. Publisher registers as a publisher for the events it will publish with by calling `icrc72_register_publication` and receives back a publicationId from the Orchestrator canister
-3. Publisher will receive broadcaster assignments via a notification that has a data structure as follows:
+1. Publisher acts as a subscriber and queries valid broadcasters via the icrc72_get_valid_broadcasters endpoint.
+2. Publisher registers as a subscriber to the namespace `icrc72:publisher:sys:{principal as Text}` by calling the icrc72_register_subscription method.
+3. Publisher registers as a publisher for the events it will publish with by calling `icrc72_register_publication` and receives back a publicationId from the Orchestrator canister
+4. Publisher will receive broadcaster assignments via a notification that has a data structure as follows:
 
   - `icrc72:publisher:broadcaster:add`: #Array[(Nat, Blob)] - ID of the publication and broadcaster to broadcast to
   - `icrc72:publisher:broadcaster:remove`: #Array(Nat) - ID for the notification
   - `icrc72:publisher:broadcaster:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the publication for which the error occurred
 
- 
  4. The publisher will now be ready to broadcast.
 
  ### Event Structures
@@ -915,7 +860,7 @@ Work flow:
   ])
  ```
 
- [Flow](https://mermaid.live/edit#pako:eNp9kkFv4jAQhf-KNadWShFOCiQ-VCr00kN3q-W2ilRNnQlYInZqO9KyiP9em0AKKru5OMq8-eaN83YgTUUgwNFHR1rSk8KVxabULDwtWq-kalF79tq9M3Tx2Ci3Jvtd8dPKdZTEk5y36M0V1XwRNXNrsJLofAT1okC-e3iIzYIpaeUsfbO0UlHy5rp3J61qvTL6pi-K9uREuK0Trapue04kDKAlbWp2wsTByIY-VhvL_gXrWVeIg3P26Jxa6Ya0v5DNF-JY6i9LYnTNvLlc-nrH8mzRby3nnv53W-3X2BuNDbkWJSVMGl2r1fktBULgCPaLfGcv7T4_Xeqix-O_P1vc9aL5YkB91dgP41V95EECDdkGVRWytotdJfg1NVSCCK8V1dhtfAml3gcpdt4st1qCqHHjKIGurdCfsjl8pUqFiL30AT7kOIGQMRA7-AMiHU9G0xkv8rzIeDHLEtiCuEtTPuJTnuV5lo7vec73Cfw1JkD5KM0n42nBeTZLJ8UkPcB-H2qHgftPcrkNog)
+ [Flow](https://mermaid.live/edit#pako:eNp9kkFv4jAQhf-K5ROVUoSTBRIfKi300kO3q-W2ioQGZxIsJXbWdlZLEf99bQIBVNpcHHnefH4zensqdIGUU4t_OlQCnyVUBppcEf-1YJwUsgXlyM9uQ8CGo5Z2i-aj4s2IbZCEE60z4PQd1WIZNAujoRBgXQD1Ik9-fHoKzZxIYcQ8Xlfo1n-hlsV6c9Hb0cMXLQYrGVRr222sMLJ1UqtRX-Tt2Ty3O8tbWTz0nEAYQCusS3LGBK9Ahj5SakM-g_WsO8RhWPLdWlmpBpW7kS2W_FTq9ysguCZO3-7pfsfqatAPLdeevtpWe3l2pKBB24LAiAitSlldb8kTPIeTX-g6c2v35flWFzye4nI1uO1Fi-WAutTID-1keeLRiDZoGpCFj-c-dOXUbbHBnHL_W2AJXe1ymquDl0Ln9GqnBOUl1BYj2rUFuHOch1sspE_la5_5Y_Qj6mNJ-Z7-ozyeTMezOcvSNEtYNk8iuqP8MY7ZmM1YkqZJPPnGUnaI6LvWHsrGcTqdzDLGknk8zabxEfb7WDs-ePgPK48fMQ)
 
  ![Publisher Flow](publisher.png "Publisher")
 
@@ -924,6 +869,8 @@ sequenceDiagram
     participant Pub as Publisher
     participant Orch as Orchestrator
     participant BC as Broadcaster
+
+    Pub->>Orch: icrc72_get_valid_broadcasters()
 
     Pub->>Orch: icrc72_register_subscription(icrc72:publisher:sys:pid)
     Orch->>Orch: Self register as a publisher for icrc72:publisher:sys:pid
@@ -941,7 +888,7 @@ sequenceDiagram
 
  ## Broadcaster Life Cycle
 
-A broadcaster will listen for events from the Orchestrator canister to make sure it has valid event routing information.  The Orchestrator canister is responsible for emitting an ICRC-72 event that provides the broad with its assigned subscriptions and publications.
+A broadcaster will listen for events from the Orchestrator canister to make sure it has valid event routing information.  The Orchestrator canister is responsible for emitting an ICRC-72 event that provides the broadcaster with its assigned subscriptions and publications.
 
 This makes each broadcaster also as subscriber.
 
@@ -950,12 +897,14 @@ Work flow:
 1. Broadcaster registers as a subscriber to the namespace `icrc72:broadcaster:sys:{principal as Text}` by calling the icrc72_register_subscription method.
 2. Broadcaster will receive broadcaster assignments via a notification that has a data structure as follows:
 
-  - `icrc72:publication:add`: Array[Nat] - optional - publications the broadcaster can expect events for.
-  - `icrc72:publication:remove`: Array[Nat] - optional - publications the broadcaster is no longer responsible for.
-  - `icrc72:subscription:add`: Array[Nat] - optional - subscriptions being added
-  - `icrc72:subscription:remove`: Array[Nat] - optional - subscriptions being removed
-  - `icrc72:relay:add`: Array[Array[Nat, Blob]] - optional - subscriptions being added as a relay and the target relay canister
-  - `icrc72:relay:remove`: Array[Array[Nat,Blob]] - optional - subscriptions being removed as a relay and the target relay canisters to remove
+  - `icrc72:broadcaster:publisher:add`: Array[ Array[Text, Blob]] - optional - publisher the broadcaster can expect events for.
+  - `icrc72:broadcaster:publisher:remove`: Array[ Array[Text, Blob]] - optional - publisher the broadcaster is no longer responsible for.
+  - `icrc72:broadcaster:subscriber:add`: Array[ Array[Text, Blob]] - optional - subscriber the broadcaster can expect events for.
+  - `icrc72:broadcaster:subscriber:remove`: Array[ Array[Text, Blob]] - optional - subscriber the broadcaster is no longer responsible for.
+  - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob]] - optional - subscriptions being added as a relay and the target relay canister
+  - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob]] - optional - subscriptions being removed as a relay and the target relay canisters to remove
+  - `icrc72:broadcaster:relayer:add`: Array[Array[Text, Blob]] - optional - relayer being added as a relay and the target relay canister
+  - `icrc72:broadcaster:relayer:remove`: Array[Array[Text,Blob]] - optional - relayer being removed as a relay and the target relay canisters to remove
 
 3. Once the broadcaster receives an event, it needs to pull the needed data from the Orchestrator canister that it needs to fulfill its job. This includes pulling publication info and subscription info.
  
@@ -995,8 +944,8 @@ Workflow:
 2. Subscriber registers as a subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator canister.
 3. Subscriber will receive a subscription activated message via a notification that has a data structure as follows:
 
-  - `icrc72:subscriber:broadcaster:add`: Array[Nat,Blob] - ID of the subscriptions activated and the the expected broadcasters
-  - `icrc72:subscriber:broadcaster:remove`: Array[Nat,Blob] - ID of the subscriptions activated and the the expected broadcasters
+  - `icrc72:subscriber:broadcaster:add`: Array[Text,Blob] - ID of the subscriptions activated and the the expected broadcasters
+  - `icrc72:subscriber:broadcaster:remove`: Array[Text,Blob] - ID of the subscriptions activated and the the expected broadcasters
   - `icrc72:subscriber:error`: Array[Map[("error", #Text), ("code", Nat)?, ("id",#Nat)]] - ID of the subscriptions for which the error occurred
  
  4. The subscriber will now start receiving events unless an error has occured
@@ -1052,7 +1001,7 @@ The ICRC-72 standard may be extended or replaced by other ICRC Standards in the 
 
 ### ICRC-77 Event Replay
 
-Notification Replay for recovery of missed messages was specifically removed from this ICRC standard to reduce the size and will submitted under ICRC-77 in the future.
+Notification Replay for recovery of missed notifications was specifically removed from this ICRC standard to reduce the size and will submitted under ICRC-77 in the future.
 
 ### ICRC-83 Block Schema
 
