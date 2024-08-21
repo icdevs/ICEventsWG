@@ -20,6 +20,11 @@ This standard describes how these roles interact within the Internet Computer ec
 
 ### Event Identifiers
 
+
+```candid "Type definitions" +=
+type EventIdentifier : nat;
+```
+
 1. Event identifiers MUST be represented as natural numbers with infinite precision. These MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
 
 2. Event identifiers MUST be unique for a specific event namespace.
@@ -34,15 +39,33 @@ This standard describes how these roles interact within the Internet Computer ec
 
 ### Timestamps
 
+```candid "Type definitions" +=
+type Timestamp : nat;
+```
+
 Timestamps represent the time on the canister that produced the event during the block the event was submitted for publishing. They are represented as Natural numbers and are UTC Nanoseconds.
 
 ### Namespaces
+
+```candid "Type definitions" +=
+type Namespace : text;
+```
 
 Events on the IC SHOULD use a namespacing pattern that ensures the event namespace does not infringe on the scope of other possible messages.  For more information see [this thread](https://forum.dfinity.org/t/proposal-to-adopt-the-namespaced-interfaces-pattern-as-a-best-practice-for-ic-developers/9262). 
 
 For example, do not use a namespace of "transfer" as many other canisters on the IC may have similar "transfer" events and your event may become inoperable with other canisters that already consume the "transfer" event. Users SHOULD choose a namespace that they can demonstrate control over. For example if you own the domain foo.com, a good namespace would be com.foo.{application}.transfer. Future event systems MAY ask you to prove ownership of a domain that you with to create a publication for.
 
 The use of namespaces with wildcards and filters can significantly enhance the usability and effectiveness of subscription systems. This approach offers users the ability to finely adjust event monitoring, providing both precision and adaptability in dynamic information environments. For instance, namespaces can be structured using wildcards such as *.category.* or *.topic.*, allowing for broad or specific event categorization. Filters can then be applied to further refine subscriptions, such as category: [sports, technology] or topic: [finance, marketing], enabling users to tailor their subscriptions to their specific interests and needs.
+
+**Domains vs. Namespaces**
+
+We have deliberately made a decision to keep namespaces as generic as possible so that implementers of ICRC-72 are free to implement the namespace formatting and restrictions of their choice. 
+
+Example implementations:
+
+An implementer may choose to restrict namespaces to a subset of names such as "domain" which would need to follow a set of rules ensuring proper management and ownership of unique domains. ie "com.foo.bar.events.x".
+
+The underlying standard does assume that namespaces of the form "icrcXX:YYYYY" are typically reserved for use by ICRC-72 and its extensions for use in exchange system-level messages.
 
 Appendix - [Discussion about namespacing and wildcards for subscriptions](https://github.com/icdevs/ICEventsWG/issues/33)
 
@@ -54,7 +77,7 @@ Event data is represented using ICRC-16 generic typing variants.  Implementation
 // Generic value in accordance with ICRC-3
 type ICRC16 =
   variant {
-    Array: vec CandyShared;
+    Array: vec ICRC16;
     Blob: blob;
     Bool: bool;
     Bytes: vec nat8;
@@ -66,19 +89,21 @@ type ICRC16 =
     Int32: int32;
     Int64: int64;
     Int8: int8;
-    Map: vec record ICRC16Map;
-    ValueMap: vec ICRC16ValueMap;
+    Map: ICRC16Map;
+    ValueMap: vec ICRC16ValueMapItem;
     Nat: nat;
     Nat16: nat16;
     Nat32: nat32;
     Nat64: nat64;
     Nat8: nat8;
     Nats: vec nat;
-    Option: opt CandyShared;
+    Option: opt ICRC16;
     Principal: principal;
-    Set: vec CandyShared;
+    Set: vec ICRC16;
     Text: text;
 };
+
+type ICRC16Map = vec ICRC16MapItem;
 
 type ICRC16Property =
   {
@@ -87,39 +112,12 @@ type ICRC16Property =
     immutable: bool;
   };
 
-  type ICRC16Map = record { Text; ICRC16};
+  type ICRC16MapItem = record { Text; ICRC16};
 
-  type ICRC16ValueMap = record { ICRC16; ICRC16}
+  type ICRC16ValueMapItem = record { ICRC16; ICRC16}
 ```
 
-Event Broadcast Canisters and Event Relayers MUST NOT manipulate the data field.  Any data annotations should be done in the header collection and must be append only such that no headers are overwritten or changed.
-
-### Event Headers
-
-Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for the item, but that may be important for validation or measurement of the event.  As the event travels from the publisher, through a broadcaster, a relay and ultimately to a subscriber, the network participants may add headers to this collection.
-
-For the purposes of this standard the following headers are established:
-
-`icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event.
-`icrc72:broadcaster:received` - a #Nat the timestamp that the broadcaster received the event.
-`icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total subscriber count.
-`icrc72:relay:sent` - a #Nat the timestamp that the broadcaster sent the event to a relay.
-`icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
-`icrc72:broadcaster:sent` - a #Nat the timestamp that the broadcaster sent the event.
-
-### Event Notification Identifiers
-
-1. Event notification identifiers MUST be represented as natural numbers with infinite precision. These numbers MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
-
-2. Event Notification Ids will only be consistent and unique in the context of the broadcaster that related the event in the notification.
-
-### Event Notification Source
-
-Event Notifications include a Source that is the principal of the canister that emitted the event.
-
-### Event Notification msg.caller
-
-The `icrc72_handle_notification` and `icrc72_handle_notification_trusted` endpoints provide the broadcaster principal in the msg.caller variable included with the message.
+Event Broadcast Canisters and Event Relayers MUST NOT manipulate the data field.  Any data annotations should be done in the header collection and must be append-only such that no headers are overwritten or changed.
 
 ### Filters
 
@@ -160,19 +158,50 @@ The following items SHOULD be used for the indicated patterns:
 
 ### Statistics
 
-For statistics please se ICRC-92.
+For statistics please see ICRC-92.
 
 ### Event Data Types
+
+#### Event Headers
+
+```candid "Type definitions" +=
+type EventHeader = ICRC16MapItem;
+
+type EventHeaders = vec EventHeader;
+```
+Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for the item, but that may be important for validation or measurement of the event.  As the event travels from the publisher, through a broadcaster, a relay and ultimately to a subscriber, the network participants may add headers to this collection.
+
+For the purposes of this standard, the following headers are established:
+
+`icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
+`icrc72:broadcaster:received` - a #Nat the timestamp that the broadcaster received the event.
+`icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total subscriber count.
+`icrc72:relay:sent` - a #Nat the timestamp that the broadcaster sent the event to a relay.
+`icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
+`icrc72:broadcaster:sent` - a #Nat the timestamp that the broadcaster sent the event.
 
 #### Event
 
 Events are published from publishers by being sent to broadcasters.
 
+```candid "Type definitions" +=
+
+  type Event{
+    id: EventIdentifier;
+    prevId: opt EventIdentifier;
+    timestamp: Timestamp
+    namespace: Namespace;
+    data: ICRC16;
+    source: principal;
+    headers: ?ICRC16Map
+  };
+```
+
 - **id** (`nat`): A unique identifier for the event, allowing for distinct referencing across an event namespace.
 - **prevId** (`opt nat`): A unique identifier for the previous event if applicable.
 - **timestamp** (`nat`): The Unix epoch timestamp in nanos denoting when the event occurred.
 - **namespace** (`text`): A textual descriptor that categorizes the event into a domain-specific context for easier management and filtering.
-- **data** (`ICRC16`): The payload of the event, conforming to the ICRC-16 data standard which provides a versatile structure to accommodate various data formats.
+- **data** (`ICRC16`): The payload of the event, conforms to the ICRC-16 data standard which provides a versatile structure to accommodate various data formats.
 - **header** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 
 ```candid
@@ -194,10 +223,23 @@ let event = {
 
 When a broadcaster identifies that certain events should be relayed to other subnets it will use an Event  Object to pass the event across a subnet boundary.
 
-
-#### EventNotification
+### EventNotification
 
 Subscribers receive event notifications from broadcasters.
+
+```candid "Type definitions" +=
+  type EventNotification{
+    id: EventNotificationID;
+    eventId: nat;
+    preEventId: opt nat;
+    timestamp: nat
+    namespace: text;
+    data: ICRC16;
+    headers: ?ICRC16Map
+    source: Principal;
+    filter: ?text;
+  };
+```
 
 - **id** (`nat`): Unique identifier for the event notification.
 - **eventId** (`nat`): The identifier of the original event that triggered this notification.
@@ -208,6 +250,25 @@ Subscribers receive event notifications from broadcasters.
 - **header** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 - **source** (`Principal`): The principal ID of the canister that dispatched the event.
 - **filter** (`?text`): Optional text filter that was used to filter a positive match for this event.
+
+#### Event Notification Identifiers
+
+```candid "Type definitions" +=
+type EventNotificationId = nat;
+```
+
+1. Event notification identifiers MUST be represented as natural numbers with infinite precision. These numbers MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
+
+2. Event Notification Ids will only be consistent and unique in the context of the broadcaster that related the event in the notification.
+
+#### Event Notification Source
+
+Event Notifications include a Source that is the principal of the canister that emitted the event.
+
+#### Event Notification msg.caller
+
+The `icrc72_handle_notification` and `icrc72_handle_notification_trusted` endpoints provide the broadcaster principal in the msg.caller variable included with the message.
+
 
 ```candid
 // An event structure being published
@@ -227,32 +288,9 @@ let eventNotification = {
 ```
 
 
-```candid "Type definitions" +=
-
-  type Event{
-    id: nat;
-    prevId: opt nat;
-    timestamp: nat
-    namespace: text;
-    data: ICRC16;
-    source: principal;
-    headers: ?ICRC16Map
-  };
 
 
 
-  type EventNotification{
-    id: nat;
-    eventId: nat;
-    preEventId: opt nat;
-    timestamp: nat
-    namespace: text;
-    data: ICRC16;
-    headers: ?ICRC16Map
-    source: Principal;
-    filter: ?text;
-  };
-```
 
 Appendix: 
   [Use Principal instead of account. Maybe use derived canisterIds in the future](https://github.com/icdevs/ICEventsWG/issues/17)
