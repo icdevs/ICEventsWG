@@ -18,34 +18,9 @@ This standard describes how these roles interact within the Internet Computer ec
 
 ## Data Representations
 
-### Event Identifiers
+### Event Data Types
 
-
-```candid "Type definitions" +=
-type EventIdentifier : nat;
-```
-
-1. Event identifiers MUST be represented as natural numbers with infinite precision. These MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
-
-2. Event identifiers MUST be unique for a specific event namespace.
-
-2. Events MAY specify a `prev_id` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prev_id` based on implementation specifics, such that:
-
-   - In Single Publisher, Single Broadcaster systems, a consistent chain of messages SHOULD be maintained with no messages being dropped.
-   
-   - In Single Publisher, Multi-Broadcaster systems, a consistent chain of messaging SHOULD be maintained according to nonce partitioning, with no messages being dropped.
-
-   - In Multi Publisher, Multi-Broadcaster systems, consistent chains SHOULD be maintained across publisher-based partitions. Each partition SHOULD either remain consistent or all messages MAY be ordered, provided there is an event-specific epoch close-out schema.
-
-### Timestamps
-
-```candid "Type definitions" +=
-type Timestamp : nat;
-```
-
-Timestamps represent the time on the canister that produced the event during the block the event was submitted for publishing. They are represented as Natural numbers and are UTC Nanoseconds.
-
-### Namespaces
+#### Namespaces
 
 ```candid "Type definitions" +=
 type Namespace : text;
@@ -69,7 +44,25 @@ The underlying standard does assume that namespaces of the form "icrcXX:YYYYY" a
 
 Appendix - [Discussion about namespacing and wildcards for subscriptions](https://github.com/icdevs/ICEventsWG/issues/33)
 
-### Event Data
+#### Event Headers
+
+```candid "Type definitions" +=
+type EventHeader = ICRC16MapItem;
+
+type EventHeaders = vec EventHeader;
+```
+Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for the item, but that may be important for validation or measurement of the event.  As the event travels from the publisher, through a broadcaster, a relay and ultimately to a subscriber, the network participants may add headers to this collection.
+
+For the purposes of this standard, the following headers are established:
+
+`icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
+`icrc72:broadcaster:received` - a #Nat the timestamp that the broadcaster received the event.
+`icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total subscriber count.
+`icrc72:relay:sent` - a #Nat the timestamp that the broadcaster sent the event to a relay.
+`icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
+`icrc72:broadcaster:sent` - a #Nat the timestamp that the broadcaster sent the event.
+
+#### Event Data
 
 Event data is represented using ICRC-16 generic typing variants.  Implementations that wish to use only the `Value` subset of ICRC-16 that is found in ICRC-3 MAY do so as ICRC-16 is a super type of that type.
 
@@ -119,67 +112,6 @@ type ICRC16Property =
 
 Event Broadcast Canisters and Event Relayers MUST NOT manipulate the data field.  Any data annotations should be done in the header collection and must be append-only such that no headers are overwritten or changed.
 
-### Filters
-
-Filters SHOULD the notations provided in ICRC16 Path Standard.  Event system implementers MAY designate their own format if the previous is not sufficient.
-
-### Publications Configs
-
-When registering a publication, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
-
-The following items SHOULD be used for the indicated patterns:
-
- * `icrc72:publication:publishers:allowed:list`: Array([#Blob(PrincipalAsBlob])
- * `icrc72:publication:publishers:disallowed:list`: Array([#Blob(PrincipalAsBlob])
- * `icrc72:publication:publishers:allowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
- * `icrc72:publication:publishers:disallowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
- * `icrc72:publication:subscribers:allowed:list`: Array([#Blob(PrincipalAsBlob])
- * `icrc72:publication:subscribers:disallowed:list`: Array([#Blob(PrincipalAsBlob])
- * `icrc72:publication:subscribers:allowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
- * `icrc72:publication:subscribers:disallowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
- * `icrc72:publication:controllers:add` : Array([#Blob(PrincipalAsBlob]);
- * `icrc72:publication:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
-
-
-
-Appendix: [Move allow and disallow to config. Move modes to config](https://github.com/icdevs/ICEventsWG/issues/18)
-
-### Subscription Configs
-
-When registering a subscription, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
-
-The following items SHOULD be used for the indicated patterns:
-
- * `icrc72:subscription:skip`: Array[Nat, Nat]; Get every Xth message with an optional offset.
- * `icrc72:subscription:filter`: Text; The ICRC16 Path filter
- * `icrc72:subscription:stopped`: Bool; Do you want the subscription started upon registration;
- * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi canister round-robin subscriptions where you need an array of handlers.
- * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
-
-### Statistics
-
-For statistics please see ICRC-92.
-
-### Event Data Types
-
-#### Event Headers
-
-```candid "Type definitions" +=
-type EventHeader = ICRC16MapItem;
-
-type EventHeaders = vec EventHeader;
-```
-Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for the item, but that may be important for validation or measurement of the event.  As the event travels from the publisher, through a broadcaster, a relay and ultimately to a subscriber, the network participants may add headers to this collection.
-
-For the purposes of this standard, the following headers are established:
-
-`icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
-`icrc72:broadcaster:received` - a #Nat the timestamp that the broadcaster received the event.
-`icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total subscriber count.
-`icrc72:relay:sent` - a #Nat the timestamp that the broadcaster sent the event to a relay.
-`icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
-`icrc72:broadcaster:sent` - a #Nat the timestamp that the broadcaster sent the event.
-
 #### Event
 
 Events are published from publishers by being sent to broadcasters.
@@ -218,6 +150,32 @@ let event = {
   headers: opt #Map(["content-type", value: variant { Text: "ICRC16"}])
 };
 ```
+
+### Event Identifiers
+
+```candid "Type definitions" +=
+type EventIdentifier : nat;
+```
+
+1. Event identifiers MUST be represented as natural numbers with infinite precision. These MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
+
+2. Event identifiers MUST be unique for a specific event namespace.
+
+2. Events MAY specify a `prev_id` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prev_id` based on implementation specifics, such that:
+
+   - In Single Publisher, Single Broadcaster systems, a consistent chain of messages SHOULD be maintained with no messages being dropped.
+   
+   - In Single Publisher, Multi-Broadcaster systems, a consistent chain of messaging SHOULD be maintained according to nonce partitioning, with no messages being dropped.
+
+   - In Multi Publisher, Multi-Broadcaster systems, consistent chains SHOULD be maintained across publisher-based partitions. Each partition SHOULD either remain consistent or all messages MAY be ordered, provided there is an event-specific epoch close-out schema.
+
+#### Timestamps
+
+```candid "Type definitions" +=
+type Timestamp : nat;
+```
+
+Timestamps represent the time on the canister that produced the event during the block the event was submitted for publishing. They are represented as Natural numbers and are UTC Nanoseconds.
 
 #### EventRelay
 
@@ -286,10 +244,6 @@ let eventNotification = {
   source = Principal.fromText("aaaaa-aa")
 };
 ```
-
-
-
-
 
 
 Appendix: 
@@ -387,12 +341,39 @@ Appendix: [Allowed Publishers and subscribers should use the config](https://git
 
 Appendix: [Memo and created at time discussion](https://github.com/icdevs/ICEventsWG/issues/35)
 
+#### Publications Configs
+
+When registering a publication, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
+
+The following items SHOULD be used for the indicated patterns:
+
+ * `icrc72:publication:publishers:allowed:list`: Array([#Blob(PrincipalAsBlob])
+ * `icrc72:publication:publishers:disallowed:list`: Array([#Blob(PrincipalAsBlob])
+ * `icrc72:publication:publishers:allowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
+ * `icrc72:publication:publishers:disallowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
+ * `icrc72:publication:subscribers:allowed:list`: Array([#Blob(PrincipalAsBlob])
+ * `icrc72:publication:subscribers:disallowed:list`: Array([#Blob(PrincipalAsBlob])
+ * `icrc72:publication:subscribers:allowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
+ * `icrc72:publication:subscribers:disallowed:icrc75`: Array([#Blob(CanisterIDAsBlob), #Text("namespace")]);
+ * `icrc72:publication:controllers:add` : Array([#Blob(PrincipalAsBlob]);
+ * `icrc72:publication:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
+
+Appendix: [Move allow and disallow to config. Move modes to config](https://github.com/icdevs/ICEventsWG/issues/18)
+
 
 ### Subscription Data Types
 
 #### Subscription Registration Namespaces
 
 Implementations MAY support wildcards for subscriptions.  For example, a subscription to `*.icrc1.transfer` might register a subscriber to any events that produce a standard icrc1.transfer event regardless of the canister that emitted it.  The subscription canister must take technical limitations into account when making these subscriptions as the canister may overload itself. The wild-card language that is used is purposely left out of this standard and must be defined by the implementation of the events system.
+
+### Filters
+
+```candid "Type definitions" += 
+type Filter = Text;
+```
+
+Filters SHOULD the notations provided in ICRC16 Path Standard.  Event system implementers MAY designate their own format if the previous is not sufficient.
 
 #### Filtering records
 
@@ -455,17 +436,15 @@ Represents data about a subscription and its statistics.
 - **memo** (opt blob): optional memo for record keeping
 - **subscriber** (opt principal) : optional subscriber record to change.  Controllers can change anyone, subscribers can controllers themselves
 
-
 ``` candid "Type definitions" +=
 
-type SubscriptionRegistration = record {
-  namespace: text;
-  config: vec record{text; ICRC16};
-  memo: blob
-};
-```
+  type SubscriptionIdentifier = nat;
 
-``` candid "Type definitions" +=
+   type SubscriptionRegistration = record {
+     namespace: text;
+     config: vec record{text; ICRC16};
+     memo: blob
+   };
 
  type SubscriptionIdentifier = variant{
     namespace: text;
@@ -474,7 +453,7 @@ type SubscriptionRegistration = record {
 
 
 type SubscriberSubscriptionInfo = record {
-  subscriptionId : nat;
+  subscriptionId : SubscriptionIdentifier;
   subscriber: principal;
   config: vec ICRC16Map;
   stats: vec ICRC16Map;
@@ -482,7 +461,7 @@ type SubscriberSubscriptionInfo = record {
 
 
 type SubscriptionInfo = record {
-  subscriptionId: Nat;
+  subscriptionId: SubscriptionIdentifier;
   namespace: text;
   config: vec ICRC16Map;
   stats: vec ICRC16Map;
@@ -495,7 +474,7 @@ type SubscriberInfo = record {
 
 type SubscriptionUpdate = record {
     subscription : variant {
-        id: nat;
+        id: SubscriptionIdentifier;
         namespace: text;
     };;
     newConfig : opt vec {text, ICRC16};
@@ -503,9 +482,25 @@ type SubscriptionUpdate = record {
 };
 ```
 
+#### Subscription Configs
+
+When registering a subscription, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
+
+The following items SHOULD be used for the indicated patterns:
+
+ * `icrc72:subscription:skip`: Array[Nat, Nat]; Get every Xth message with an optional offset.
+ * `icrc72:subscription:filter`: Text; The ICRC16 Path filter
+ * `icrc72:subscription:stopped`: Bool; Do you want the subscription started upon registration;
+ * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi canister round-robin subscriptions where you need an array of handlers.
+ * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
+
+### Statistics
+
+For statistics please see ICRC-92.
+
 ## Ingress methods
 
-Generally pub/sub should be ONLY intercanister methods. If you want to publish an event message, have a call to another method and emit the event.
+Generally, pub/sub should be ONLY inter-canister methods. If you want to publish an event message, have a call to another method and emit the event.
 
 ## Methods
 
@@ -523,7 +518,7 @@ Generally pub/sub should be ONLY intercanister methods. If you want to publish a
 
 //todo: what errors will we run into?
 
-```candid "Types" +=
+```candid "Type definitions" +=
 
 type GenericError = record {
   error_code: Nat;
@@ -555,18 +550,15 @@ type PublicationRegisterResult = opt variant {
   Err: PublicationRegisterError;
 };
 
-
 type SubscriptionRegisterResult = opt variant {
   Ok: nat;
   Err: SubscriptionRegisterError;
 };
 
-
 type UpdatePublicationResult = opt variant {
   Ok: bool;
   Err: PublicationRegisterError;
 };
-
 
 type SubscriptionUpdateResult = opt variant {
   Ok: bool;
@@ -592,7 +584,6 @@ icrc72_update_publication : (vec PublicationUpdate) -> (vec UpdatePublicationRes
 // Returns a vector of results, indicating success or providing an error detail for each subscription update.
 icrc72_update_subscription : (vec SubscriptionUpdate) -> (vec UpdateSubscriptionResult);
 ```
-
 
 ### Orchestrator Query Methods
 
@@ -669,7 +660,6 @@ Returns a list of all broadcasters known to the system, supports pagination and 
 - **Returns**:
   - A list of `BroadcasterInfo` which provides structured information about each broadcaster including associated statistics.
 
-
 ```candid "Methods" +=
 
 type ICRC75Item = record {
@@ -713,7 +703,6 @@ icrc72_get_publications({
   filter: opt OrchestrationFilter;
 }) -> query vec PublicationInfo;
 
-
 // Returns the subscribers known to the Orchestrator canister
 icrc72_get_subscribers({
   prev: opt principal;
@@ -727,14 +716,11 @@ icrc72_get_subscriptions({
   filter: opt OrchestrationFilter;
 }) -> query vec SubscriptionInfo;
 
-
 icrc72_get_broadcasters({
   prev: opt principal;
   take: opt nat;
   filter: opt OrchestrationFilter;
 }) -> query vec BroadcasterInfo;
-
-
 ```
 
 ## Broadcaster Canister
@@ -750,7 +736,7 @@ These functions define the capabilities of a broadcaster canister in the pub-sub
 - **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing notification identifiers, or an error as `PublishError`.
 - **Summary**: Accepts a list of events from publishers and attempts to process and distribute these events to relevant subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: Relays will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relay and care should be taken to validate the sender.
 
-#### 
+#### icrc72_confirm_notifications
 
 - **Type**: Update method
 - **Parameters**: A vector of `nat` representing notifications identifiers.
@@ -807,7 +793,6 @@ icrc72_get_broadcaster_stats : () -> (BroadcasterStats) query;
 ## Subscriber Canister
 
 ### Subscriber Update Functions
-
 
 #### icrc72_handle_notification
 
@@ -950,9 +935,8 @@ Work flow:
 3. Once the broadcaster receives an event, it needs to pull the needed data from the Orchestrator canister that it needs to fulfill its job. This includes pulling publication info and subscription info.
  
  
- 4. The subscriber will now start receiving events unless an error has occured
+ 4. The subscriber will now start receiving events unless an error has occurred
 
- 
 
 [Flow](https://mermaid.live/edit#pako:eNqFklFrwjAQx79KuOcqpl21zYOwdnuUDWQgoy9nE2vAJi5Jx5z43Ze2Ticqy0Mv9P_7312420OpuQAGVnw0QpXiSWJlsC4U8WeLxslSblE58mLKNUHbRWGdQafNNZXlLZMZjbxE68QN5LVZtowPG2nXt4h5T_hgSyOXd5DFJbPoof7bNjmYTrOckUdrZaXO5Qgq_sdGnL5u18NH96-Nk-dPoZzt9Sz3ss_BztZev5QXd3QvDY75c61W0tRkJqzFSqrqRCz-QXwRD7QPZeRty9GJvgSZO2z7hABqYWqU3E9333oKcGtRiwKYv3KxwmbjCijUwaPYOD3fqRLYCjdWBNB0KY_bcPoruPRjn_Ur021OAH4ewPbwBSwcxcPxhKZJkkY0nUQB7IANwpAO6ZhGSRKFowea0EMA31r7pHQYJvFonFIaTcI4jcMu2XundQUPP-zX2M8)
 
@@ -1035,7 +1019,6 @@ Workflow:
     Sub-->>BC: Confirmation Receipt
 ```
 
-
 ## Extensions
 
 The ICRC-72 standard may be extended or replaced by other ICRC Standards in the future.
@@ -1046,7 +1029,7 @@ Notification Replay for recovery of missed notifications was specifically remove
 
 ### ICRC-83 Block Schema
 
-Transaction Logs are not required for ICRC-72 implementation, but maybe added for transparency.  The proposed block schemas are handled in an extension to ICRC-72 in ICRC-83.
+Transaction Logs are not required for ICRC-72 implementation but may be added for transparency.  The proposed block schemas are handled in an extension to ICRC-72 in ICRC-83.
 
 ### ICRC-92 Statistics Definition and Collection for Event Utility
 
