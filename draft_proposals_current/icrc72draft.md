@@ -641,15 +641,18 @@ type ICRC75Item = record {
 
 type Map = ()
 
+type OrchestrationQuerySlice = {
+  variant {
+    BySubscriber: Principal;
+    ByPublisher : Principal;
+    ByBroadcaster : Principal;
+    ByNamespace : Text;
+  }
+}
+
 type OrchestrationFilter = record {
   statistics: opt(opt (vec text)); // null means do not include statistics opt(null) means include all statistics.
-  slice: opt variant {
-    BySubscriber: vec Principal;
-    ByPublisher : vec Principal;
-    ByBroadcaster : vec Principal;
-    ByNamespace : vec Text;
-  }
-
+  slice: vec OrchestrationQuerySlice
 };
 
 // Returns the publishers known to the Orchestrator canister
@@ -709,7 +712,7 @@ These functions define the capabilities of a broadcaster canister in the pub-sub
 - **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing notification identifiers, or an error as `PublishError`.
 - **Summary**: Accepts a list of events from publishers and attempts to process and distribute these events to relevant subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: Relays will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relay and care should be taken to validate the sender.
 
-#### icrc72_confirm_notificationss
+#### 
 
 - **Type**: Update method
 - **Parameters**: A vector of `nat` representing notifications identifiers.
