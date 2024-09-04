@@ -44,75 +44,6 @@ The underlying standard does assume that namespaces of the form "icrcXX:YYYYY" a
 
 Appendix - [Discussion about namespacing and wildcards for subscriptions](https://github.com/icdevs/ICEventsWG/issues/33)
 
-#### Event Headers
-
-```candid "Type definitions" +=
-type EventHeader = ICRC16MapItem;
-
-type EventHeaders = ICRC16Map;
-```
-
-Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for ICRC-72 completness, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, a relay and ultimately to a Subscriber, the network participants may add headers to this collection.
-
-For the purposes of this standard, the following headers are established:
-
-`icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
-`icrc72:broadcaster:received` - a #Nat the timestamp that the Broadcaster received the event.
-`icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total Subscriber count.
-`icrc72:relay:sent` - a #Nat the timestamp that the Broadcaster sent the event to a relay.
-`icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
-`icrc72:broadcaster:sent` - a #Nat the timestamp that the Broadcaster sent the event.
-
-#### Event Data
-
-Event data is represented using ICRC-16 generic typing variants.  Implementations that wish to use only the `Value` subset of ICRC-16 that is found in ICRC-3 MAY do so as ICRC-16 is a super type of that type.
-
-```candid "Type definitions" +=
-// Generic value in accordance with ICRC-3
-
-type ICRC16MapItem = record { Text; ICRC16};
-
-type ICRC16ValueMapItem = record { ICRC16; ICRC16}
-
-type ICRC16Map = vec ICRC16MapItem;
-
-type ICRC16Property = record {
-  name : text;
-  value: ICRC16;
-  immutable: bool;
-};
-
-type ICRC16 =
-  variant {
-    Array: vec ICRC16;
-    Blob: blob;
-    Bool: bool;
-    Bytes: vec nat8;
-    Class: vec ICRC16Property;
-    Float: float64;
-    Floats: vec float64;
-    Int: int;
-    Int16: int16;
-    Int32: int32;
-    Int64: int64;
-    Int8: int8;
-    Map: ICRC16Map;
-    ValueMap: vec ICRC16ValueMapItem;
-    Nat: nat;
-    Nat16: nat16;
-    Nat32: nat32;
-    Nat64: nat64;
-    Nat8: nat8;
-    Nats: vec nat;
-    Option: opt ICRC16;
-    Principal: principal;
-    Set: vec ICRC16;
-    Text: text;
-};
-```
-
-Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `header` collection and must be append-only such that no headers are overwritten or changed.
-
 #### Event
 
 Events are published from Publishers by being sent to Broadcasters.
@@ -250,6 +181,76 @@ Appendix:
  Appendix:
   [Notification should include filter used](https://github.com/icdevs/ICEventsWG/issues/17)
 
+#### Event Headers
+
+```candid "Type definitions" +=
+type EventHeader = ICRC16MapItem;
+
+type EventHeaders = ICRC16Map;
+```
+
+Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for ICRC-72 completeness, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, a relay and ultimately to a Subscriber, the network participants may add headers to this collection.
+
+For the purposes of this standard, the following headers are established:
+
+- `icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
+- `icrc72:broadcaster:received` - a #Nat the timestamp that the Broadcaster received the event.
+- `icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total Subscriber count.
+- `icrc72:relay:sent` - a #Nat the timestamp that the Broadcaster sent the event to a relay.
+- `icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
+- `icrc72:broadcaster:sent` - a #Nat the timestamp that the Broadcaster sent the event.
+
+#### Event Data
+
+Event data is represented using ICRC-16 generic typing variants.  Implementations that wish to use only the `Value` subset of ICRC-16 that is found in ICRC-3 MAY do so as ICRC-16 is a super type of that type.
+
+```candid "Type definitions" +=
+// Generic value in accordance with ICRC-3
+
+type ICRC16MapItem = record { Text; ICRC16};
+
+type ICRC16ValueMapItem = record { ICRC16; ICRC16}
+
+type ICRC16Map = vec ICRC16MapItem;
+
+type ICRC16Property = record {
+  name : text;
+  value: ICRC16;
+  immutable: bool;
+};
+
+type ICRC16 =
+  variant {
+    Array: vec ICRC16;
+    Blob: blob;
+    Bool: bool;
+    Bytes: vec nat8;
+    Class: vec ICRC16Property;
+    Float: float64;
+    Floats: vec float64;
+    Int: int;
+    Int16: int16;
+    Int32: int32;
+    Int64: int64;
+    Int8: int8;
+    Map: ICRC16Map;
+    ValueMap: vec ICRC16ValueMapItem;
+    Nat: nat;
+    Nat16: nat16;
+    Nat32: nat32;
+    Nat64: nat64;
+    Nat8: nat8;
+    Nats: vec nat;
+    Option: opt ICRC16;
+    Principal: principal;
+    Set: vec ICRC16;
+    Text: text;
+};
+```
+
+Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `header` collection and must be append-only such that no headers are overwritten or changed.
+
+//todo: Add note about CBOR and binary data options and warnings.
 
 ### Publication Data Types
 
@@ -258,7 +259,7 @@ Appendix:
 Publication Registrations should be sent from a Publisher to the Orchestrator to indicate the desire to publish a particular event.  
 
 - **namespace** (`Text`): Defines the topic or category of the events that a Publisher can publish under.
-- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules.
+- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules. //todo: point to configs section
 
 ```motoko
 // Register a new event publication with specific configurations
@@ -358,6 +359,7 @@ The following items SHOULD be used for the indicated patterns:
 
 Appendix: [Move allow and disallow to config. Move modes to config](https://github.com/icdevs/ICEventsWG/issues/18)
 
+**Batch Note** - If the client needs more granular control of atomicity they may submit config changes one at a time and react appropriately to failures.  Implementors MAY implement their own transactional system, but it is not required.  Implementors MAY restrict config changes to accept only one item at a time.
 
 ### Subscription Data Types
 
@@ -407,7 +409,7 @@ Sent by a Subscriber to an Orchestrator to register the desire to start listenin
 
 - **subscriptionId** (`Nat`): The ID of a registered Subscription.
 - **namespace** (`Text`): Defines the topic or category that the Subscriber is interested in.
-- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns.
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. //todo: point to configs section
 - **stats** (`ICRC16Map`): Statistical information regarding the Subscriber's activity, such as number of messages received, active subscriptions, etc.
 
 
@@ -491,6 +493,8 @@ The following items SHOULD be used for the indicated patterns:
  * `icrc72:subscription:stopped`: Bool; Do you want the subscription started upon registration;
  * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi canister round-robin subscriptions where you need an array of handlers.
  * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
+
+**Batch Note** - If the client needs more granular control of atomicity they may submit config changes one at a time and react appropriately to failures.  Implementors MAY implement their own transactional system, but it is not required.  Implementors MAY restrict config changes to accept only one item at a time.
 
 ### Statistics
 
@@ -584,6 +588,8 @@ Generally, pub/sub should be ONLY inter-canister methods. If you want to publish
 3. **icrc72_update_publication**: This method takes a vector of `PublicationUpdateRequest` records and returns a vector of optional `UpdatePublicationResult`. It is used to apply changes to registered publications such as updating configuration or namespace details. Each element in the input corresponds to a publication update action, and the method provides corresponding results for each action in the output.
    
 4. **icrc72_update_subscription**: Similar to publication updates, this method accepts a vector of `SubscriptionUpdate` records for updating existing subscriptions. The outputs are encapsulated in a vector of optional `UpdateSubscriptionResult`, detailing the success or error of each subscription update action. This allows Subscribers to modify aspects of their subscriptions like filters, skips, or activation status.
+
+//todo: add delete for publication and subscription
 
 ```candid "Type definitions" +=
 
@@ -744,7 +750,11 @@ type OrchestrationQuerySlice = {
 }
 
 type OrchestrationFilter = record {
-  statistics: opt(opt (vec text)); // null means do not include statistics opt(null) means include all statistics.
+  statistics: variant {
+    None;
+    All;
+    List : vec text;
+  };
   slice: vec OrchestrationQuerySlice
 };
 
@@ -852,7 +862,7 @@ Appendix: [Decision to return simple confirmation message](https://github.com/ic
 icrc72_get_broadcaster_stats : () -> (BroadcasterStats) query;
 ```
 
-//should there be more?
+//todo: Yes! Add comments about handling the definitions of statistics outside this ICRC
 
 
 ## Subscriber Canister
