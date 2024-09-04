@@ -1154,3 +1154,30 @@ In accordance with the asynchronous communication model:
 - **Publishers do not receive feedback** concerning the reception or handling of events by Subscribers. Once an event is dispatched correctly from the Publisher to the Broadcaster (or directly to the Subscribers, if applicable), the Publisher's responsibility concludes.
 - **Error propagation is not actively managed** between Publishers and Subscribers. Errors that occur in processing an event on the Subscriber's end do not retroactively influence the Publisher or the Broadcaster. Each component handles its own internal errors independently.
 - **Broadcasters**, similar to Publishers, do not track or manage errors related to a Subscriber's ability to process an event. They ensure the events are forwarded as specified but do not confirm processing outcomes.
+
+## Performance and Scalability
+
+Implementing the ICRC-72 standard effectively on the Internet Computer requires careful consideration of performance and scalability factors. This section outlines key considerations and strategies to optimize the efficiency and scalability of pub-sub systems in decentralized environments.
+
+### 1. **Balancing Event Size and Information Content**
+
+On the Internet Computer, the cost of processing requests is tied to the number of cycles consumed, which is directly impacted by the size of the data in the requests. When designing event messages, it is crucial to balance the need to include sufficient information for subscribers against the cost implications of larger message sizes.
+
+- **Minimal Information for Efficiency**: Including only the essential information needed by subscribers in each event can minimize request sizes, thereby reducing the cycle costs associated with processing these requests. This approach minimizes the load on both the Publisher and the Broadcaster, allowing the system to handle more requests efficiently.
+
+- **Reducing Additional Requests**: On the other hand, if an event contains too little information, subscribers may need to make additional requests to retrieve the necessary data. These extra requests can increase overall system load, leading to higher latency and additional cycle costs. To optimize performance, events should be designed to include enough information to avoid unnecessary follow-up queries while keeping the data payload minimal.
+
+- **Strategies for Optimal Event Design**: Implementers should consider strategies such as including summary data or compressed representations of more extensive datasets within the event. For example, a Publisher might include a compact hash of additional data, which subscribers can verify without fetching the entire dataset unless necessary.
+
+### 2. **Impact of Event Size on Throughput**
+
+The size of events directly impacts the throughput of the pub-sub system on the Internet Computer. Each request is limited to approximately 2MB, which constrains the maximum size of individual events.
+
+- **Event Size Limitations**: Larger event sizes reduce the number of events that can be processed concurrently, limiting the throughput of the system. Publishers and Broadcasters must manage these constraints carefully to maximize efficiency. If events are too large, they can clog the network and reduce the overall rate at which messages are transmitted and processed.
+
+- **Optimizing Event Sizes**: To maintain high throughput, event sizes should be kept as small as possible while still containing sufficient information.
+
+### 3. **Managing Outgoing Bandwidth and Subnet Load**
+
+Outgoing bandwidth on the Internet Computer is broad and scales well. Every event published to a subnet involves overhead due to the architecture of the IC's decentralized, peer-to-peer (p2p) network, but only the interested replicas need to download the data from the p2p network. Thus, a subnet's outgoing bandwidth may be significantly higher than the amount of data that may enter via ingress as all incoming data needs to be included in the incoming request.
+
