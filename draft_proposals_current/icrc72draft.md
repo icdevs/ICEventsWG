@@ -51,7 +51,8 @@ type EventHeader = ICRC16MapItem;
 
 type EventHeaders = ICRC16Map;
 ```
-Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for the item, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, a relay and ultimately to a Subscriber, the network participants may add headers to this collection.
+
+Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for ICRC-72 completness, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, a relay and ultimately to a Subscriber, the network participants may add headers to this collection.
 
 For the purposes of this standard, the following headers are established:
 
@@ -68,6 +69,19 @@ Event data is represented using ICRC-16 generic typing variants.  Implementation
 
 ```candid "Type definitions" +=
 // Generic value in accordance with ICRC-3
+
+type ICRC16MapItem = record { Text; ICRC16};
+
+type ICRC16ValueMapItem = record { ICRC16; ICRC16}
+
+type ICRC16Map = vec ICRC16MapItem;
+
+type ICRC16Property = record {
+  name : text;
+  value: ICRC16;
+  immutable: bool;
+};
+
 type ICRC16 =
   variant {
     Array: vec ICRC16;
@@ -95,19 +109,6 @@ type ICRC16 =
     Set: vec ICRC16;
     Text: text;
 };
-
-type ICRC16Map = vec ICRC16MapItem;
-
-type ICRC16Property =
-  {
-    name : text;
-    value: ICRC16;
-    immutable: bool;
-  };
-
-  type ICRC16MapItem = record { Text; ICRC16};
-
-  type ICRC16ValueMapItem = record { ICRC16; ICRC16}
 ```
 
 Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `header` collection and must be append-only such that no headers are overwritten or changed.
@@ -147,7 +148,7 @@ let event = {
     ("com.example.myapp.event.host", #Text("John Smith")),
     ("com.example.mayapp.event.date", #Nat(1672525600000000000)),
   ]);
-  headers: ?#Map(["content-type", value: variant { Text: "ICRC16"}])
+  headers: ?#Map([("content-type", #Text("ICRC16"))])
 };
 ```
 
@@ -223,6 +224,7 @@ Event Notifications include a Source that is the principal of the canister that 
 
 The `icrc72_handle_notification` and `icrc72_handle_notification_trusted` endpoints provide the Broadcaster principal in the msg.caller variable included with the message.  `id` and `prevId` of an event are converted to `eventId` and `prevEventId` in the outgoing notifications.
 
+`icrc72_handle_notification_trusted` may be used in event systems where the Publisher or Broadcaster trust all possible Subscribers such that there is no risk of a Subscriber rendering the calling canister un-upgradable by withholding a response.
 
 ```motoko
 // An event structure being published
@@ -236,7 +238,7 @@ let eventNotification = {
     ("com.example.mayapp.event.host", #Text("John Smith")),
     ("com.example.mayapp.event.date", #Nat(1672525600000000000)),
   ]);
-  headers = ?#Map(["content-type", value: variant { Text: "ICRC16"}]);
+  headers = ?#Map([("content-type", #Text("ICRC16"))]);
   source = Principal.fromText("aaaaa-aa")
 };
 ```
@@ -582,8 +584,6 @@ Generally, pub/sub should be ONLY inter-canister methods. If you want to publish
 3. **icrc72_update_publication**: This method takes a vector of `PublicationUpdateRequest` records and returns a vector of optional `UpdatePublicationResult`. It is used to apply changes to registered publications such as updating configuration or namespace details. Each element in the input corresponds to a publication update action, and the method provides corresponding results for each action in the output.
    
 4. **icrc72_update_subscription**: Similar to publication updates, this method accepts a vector of `SubscriptionUpdate` records for updating existing subscriptions. The outputs are encapsulated in a vector of optional `UpdateSubscriptionResult`, detailing the success or error of each subscription update action. This allows Subscribers to modify aspects of their subscriptions like filters, skips, or activation status.
-
-//todo: what errors will we run into?
 
 ```candid "Type definitions" +=
 
