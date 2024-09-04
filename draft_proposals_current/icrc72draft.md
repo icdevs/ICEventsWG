@@ -267,7 +267,7 @@ Publication Registrations should be sent from a publisher to the Orchestrator ca
 let publicationRegistration = {
   namespace: "com.example.myapp.events";
   config: [
-    ("icrc72:publication:publishers:allowed:list", #Array([#Blob(Principal.toBlob()"aaaaa-aa")])),
+    ("icrc72:publication:publishers:allowed:list", #Array([#Blob(Principal.toBlob("aaaaa-aa")])),
     ("icrc72:publication:mode", #Text("fifo"))
   ];
   memo: ?Text.toUtf8("Initial registration of MyApp events")
@@ -279,14 +279,14 @@ let publicationRegistration = {
 Represents a particular publication namespace and any statistics about that publication.
 
 - **namespace** (`text`): Identifier for the category or domain of publication.
-- **stats** (`[Map]`): Statistical data relevant to the publication, possibly including metrics like number of subscribers, total events published, etc.
+- **stats** (`ICRC16Map`): Statistical data relevant to the publication, possibly including metrics like number of subscribers, total events published, etc.
 
 #### PublisherInfo
 
 Represents a particular publisher namespace and any statistics about that publication.
 
 - **publisher** (`principal`): Principal ID of the publisher.
-- **stats** (`[Map]`): Contains statistical data concerning the publisher, such as number of publications, event counts, etc.
+- **stats** (`ICRC16Map`): Contains statistical data concerning the publisher, such as number of publications, event counts, etc.
 
 #### PublisherPublicationInfo
 
@@ -294,7 +294,7 @@ Represents a particular publication namespace, publisher tuple and any statistic
 
 - **publisher** (`principal`): The identifier of the publisher.
 - **namespace** (`principal`): The namespace associated with specific publications by the publisher.
-- **stats** (`[Map]`): Detailed metrics related to publications in the specified namespace by the publisher.
+- **stats** (`ICRC16Map`): Detailed metrics related to publications in the specified namespace by the publisher.
 
 ``` candid "Type definitions" += 
 
@@ -303,7 +303,7 @@ type PublicationIdentifier = variant {
   publicationId: nat;
 };
 
-type PublicationRegistration = {
+type PublicationRegistration = record {
   namespace: text;
   config: ICRC16Map;
   memo: blob;
@@ -343,7 +343,7 @@ Appendix: [Memo and created at time discussion](https://github.com/icdevs/ICEven
 
 #### Publications Configs
 
-When registering a publication, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
+When registering a publication, a publisher MAY provide a configuration as a `ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
 
 The following items SHOULD be used for the indicated patterns:
 
@@ -388,7 +388,7 @@ A subscriber MAY provide a skip config to ask the canister to skip broadcasting 
 Sent by a subscriber to an Orchestrator canister to register the desire to start listening to a publication.
 
 - **namespace** (`Text`): Defines the topic or category that the subscriber is interested in.
-- **config** (`[ICRC16Map]`): Configuration for the subscription, including elements like message filters or skip patterns.
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns.
 - **memo** (`opt Blob`): A 32 Byte memo. Optional.
 
 ```candid
@@ -409,8 +409,8 @@ Sent by a subscriber to an Orchestrator canister to register the desire to start
 
 - **subscriptionId** (`Nat`): The ID of a registered Subscription.
 - **namespace** (`Text`): Defines the topic or category that the subscriber is interested in.
-- **config** (`[ICRC16Map]`): Configuration for the subscription, including elements like message filters or skip patterns.
-- **stats** (`[Map]`): Statistical information regarding the subscriber's activity, such as number of messages received, active subscriptions, etc.
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns.
+- **stats** (`ICRC16Map`): Statistical information regarding the subscriber's activity, such as number of messages received, active subscriptions, etc.
 
 
 #### SubscriberInfo
@@ -418,7 +418,7 @@ Sent by a subscriber to an Orchestrator canister to register the desire to start
 Represents data about a particular subscriber and their statistics.
 
 - **subscriber** (`Principal`): The principal ID of the subscriber.
-- **stats** (`[Map]`): Statistical information regarding the subscriber's activity, such as number of messages received, active subscriptions, etc.
+- **stats** (`ICRC16Map`): Statistical information regarding the subscriber's activity, such as number of messages received, active subscriptions, etc.
 
 #### SubscriberSubscriptionInfo
 
@@ -426,13 +426,13 @@ Represents data about a subscription and its statistics.
 
 - **subscriber** (`principal`): The principal ID of the entity subscribed to the events.
 - **namespace** (`text`): The namespace pertaining to the subscribed events.
-- **config** (`vec ICRC16Map`): Configuration settings specific to the subscriber, which may include filters and skip details.
-- **stats** (`vec ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
+- **config** (`ICRC16Map`): Configuration settings specific to the subscriber, which may include filters and skip details.
+- **stats** (`ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
 
 #### SubscriptionUpdate
 
 - **subscription** (`variant{id: nat; namespace: text;};`): Identifier of the subscription to be updated.
-- **config** (`opt vec {text, ICRC16}`): Optional new configuration settings to replace or update the existing subscription configurations.
+- **config** (`ICRC16Map`): Optional new configuration settings to replace or update the existing subscription configurations.
 - **memo** (opt blob): optional memo for record keeping
 - **subscriber** (opt principal) : optional subscriber record to change.  Controllers can change anyone, subscribers can controllers themselves
 
@@ -442,7 +442,7 @@ Represents data about a subscription and its statistics.
 
    type SubscriptionRegistration = record {
      namespace: text;
-     config: vec record{text; ICRC16};
+     config: ICRC16Map;
      memo: blob
    };
 
@@ -455,21 +455,21 @@ Represents data about a subscription and its statistics.
 type SubscriberSubscriptionInfo = record {
   subscriptionId : SubscriptionIdentifier;
   subscriber: principal;
-  config: vec ICRC16Map;
-  stats: vec ICRC16Map;
+  config: ICRC16Map;
+  stats: ICRC16Map;
 };
 
 
 type SubscriptionInfo = record {
   subscriptionId: SubscriptionIdentifier;
   namespace: text;
-  config: vec ICRC16Map;
-  stats: vec ICRC16Map;
+  config: ICRC16Map;
+  stats: ICRC16Map;
 };
 
 type SubscriberInfo = record {
   subscriber: principal;
-  stats: vec ICRC16Map;
+  stats: ICRC16Map;
 };
 
 type SubscriptionUpdate = record {
@@ -477,14 +477,14 @@ type SubscriptionUpdate = record {
         id: SubscriptionIdentifier;
         namespace: text;
     };;
-    newConfig : opt vec {text, ICRC16};
+    newConfig : opt ICRC16Map;
     memo: blob;
 };
 ```
 
 #### Subscription Configs
 
-When registering a subscription, a publisher MAY provide a configuration as a `vec ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
+When registering a subscription, a publisher MAY provide a configuration as a `ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
 
 The following items SHOULD be used for the indicated patterns:
 
