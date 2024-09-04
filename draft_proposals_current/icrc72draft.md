@@ -177,10 +177,6 @@ type Timestamp : nat;
 
 Timestamps represent the time on the canister that produced the event during the block the event was submitted for publishing. They are represented as Natural numbers and are UTC Nanoseconds.
 
-#### EventRelay
-
-When a broadcaster identifies that certain events should be relayed to other subnets it will use an Event  Object to pass the event across a subnet boundary.
-
 ### EventNotification
 
 Subscribers receive event notifications from broadcasters.
