@@ -498,6 +498,77 @@ The following items SHOULD be used for the indicated patterns:
 
 For statistics please see ICRC-92.
 
+## Recommended Implementation Approaches
+
+The ICRC-72 standard accommodates three primary usage scenarios, each suited for different situations and system scales. Below are recommendations for each approach:
+
+### 1. Direct Inter-Canister Messaging
+
+**Use Case:** When the publisher knows the list of subscribers and direct interaction between canisters is required.
+
+**Required Implementations:**
+- Publisher: Method for sending events directly to subscribers
+- Subscriber: `icrc72_handle_notification` method for receiving messages
+
+**Recommended Implementations:**
+- Methods for subscription and unsubscription, if dynamic subscriber list management is needed
+
+**Advantages:**
+- Simple implementation
+- Low latency
+- Direct control over communication
+
+**Limitations:**
+- Limited scalability
+- Requires subscriber list management on the publisher side
+
+### 2. Messaging via Broadcaster
+
+**Use Case:** When publishers and subscribers are unaware of each other and are linked only through a namespace.
+
+**Required Implementations:**
+- Publisher: `icrc72_publish` method for sending events to the broadcaster
+- Subscriber: `icrc72_handle_notification` method for receiving messages from the broadcaster
+- Broadcaster: Methods for receiving events from publishers and distributing to subscribers
+
+**Recommended Implementations:**
+- Methods for registering publications and subscriptions
+- Event filtering mechanisms on the broadcaster side
+
+**Advantages:**
+- Improved scalability
+- Independence of publishers and subscribers
+- Ability to dynamically add new participants
+
+**Limitations:**
+- Additional latency due to the intermediate component (broadcaster)
+- Requires implementation and maintenance of a broadcaster
+
+### 3. Communication via Orchestrator
+
+**Use Case:** For large-scale systems spanning multiple subnets, with multiple broadcasters.
+
+**Required Implementations:**
+- All components from Scenario 2
+- Orchestrator: Methods for managing publications, subscriptions, and broadcaster assignments
+- Publishers and Subscribers: Methods for interacting with the orchestrator
+
+**Recommended Implementations:**
+- Load balancing mechanisms between broadcasters
+- Monitoring and reporting systems
+
+**Advantages:**
+- High scalability
+- Ability to distribute load across subnets
+- Centralized management of the event system
+
+**Limitations:**
+- Most complex implementation
+- Potentially higher latency
+- Requires additional resources to support the orchestrator
+
+The choice of approach depends on your system's scale, performance requirements, and the complexity of interactions between components. It's recommended to start with simpler implementations and gradually move to more complex ones as system needs grow.
+
 ## Ingress methods
 
 Generally, pub/sub should be ONLY inter-canister methods. If you want to publish an event message, have a call to another method and emit the event.
