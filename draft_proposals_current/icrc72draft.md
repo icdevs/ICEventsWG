@@ -259,7 +259,7 @@ While event publishers can use CBOR or other binary encodings to send data, we e
 Publication Registrations should be sent from a Publisher to the Orchestrator to indicate the desire to publish a particular event.  
 
 - **namespace** (`Text`): Defines the topic or category of the events that a Publisher can publish under.
-- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules. /[See Publication Configs](#Publication-Configs)
+- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules. [See Publication Configs](#publication-configs)
 
 ```motoko
 // Register a new event publication with specific configurations
@@ -388,7 +388,7 @@ A Subscriber MAY provide a skip config to ask the canister to skip broadcasting 
 Sent by a Subscriber to an Orchestrator to register the desire to start listening to a publication.
 
 - **namespace** (`Text`): Defines the topic or category that the Subscriber is interested in.
-- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#Subscription-Configs)
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#subscription-configs)
 - **memo** (`opt Blob`): A 32 Byte memo. Optional.
 
 ```candid
@@ -409,7 +409,7 @@ Sent by a Subscriber to an Orchestrator to register the desire to start listenin
 
 - **subscriptionId** (`Nat`): The ID of a registered Subscription.
 - **namespace** (`Text`): Defines the topic or category that the Subscriber is interested in.
-- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#Subscription-Configs)
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#cubscription-configs)
 - **stats** (`ICRC16Map`): Statistical information regarding the Subscriber's activity, such as number of messages received, active subscriptions, etc.
 
 
@@ -426,14 +426,14 @@ Represents data about a subscription and its statistics.
 
 - **subscriber** (`principal`): The principal ID of the entity subscribed to the events.
 - **namespace** (`text`): The namespace pertaining to the subscribed events.
-- **config** (`ICRC16Map`): Configuration settings specific to the Subscriber, which may include filters and skip details.[See Subscription Configs](#Subscription-Configs)
+- **config** (`ICRC16Map`): Configuration settings specific to the Subscriber, which may include filters and skip details.[See Subscription Configs](#subscription-configs)
 - **stats** (`ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
 
 #### SubscriptionUpdate
 
 - **subscription** (`variant{id: nat; namespace: text;};`): Identifier of the subscription to be updated.
 - **config** (`ICRC16Map`): Optional new configuration settings to replace or update the existing subscription configurations.
-- **memo** (opt blob): optional memo for record keeping
+- **memo** (opt blob): optional memo for record-keeping
 - **subscriber** (opt principal) : optional Subscriber record to change.  Controllers can change anyone, Subscribers can controllers themselves
 
 ``` candid "Type definitions" +=
