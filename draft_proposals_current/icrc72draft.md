@@ -250,7 +250,7 @@ type ICRC16 =
 
 Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `header` collection and must be append-only such that no headers are overwritten or changed.
 
-//todo: Add note about CBOR and binary data options and warnings.
+While event publishers can use CBOR or other binary encodings to send data, we encourage the use of candid as a lingua franca of the Internate Computer.
 
 ### Publication Data Types
 
@@ -259,7 +259,7 @@ Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data anno
 Publication Registrations should be sent from a Publisher to the Orchestrator to indicate the desire to publish a particular event.  
 
 - **namespace** (`Text`): Defines the topic or category of the events that a Publisher can publish under.
-- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules. //todo: point to configs section
+- **config** (`[ICRC16Map]`): Configuration details specific to the publication, catering to customization and control mechanisms like access lists or publication rules. /[See Publication Configs](#Publication-Configs)
 
 ```motoko
 // Register a new event publication with specific configurations
@@ -388,7 +388,7 @@ A Subscriber MAY provide a skip config to ask the canister to skip broadcasting 
 Sent by a Subscriber to an Orchestrator to register the desire to start listening to a publication.
 
 - **namespace** (`Text`): Defines the topic or category that the Subscriber is interested in.
-- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns.
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#Subscription-Configs)
 - **memo** (`opt Blob`): A 32 Byte memo. Optional.
 
 ```candid
@@ -409,7 +409,7 @@ Sent by a Subscriber to an Orchestrator to register the desire to start listenin
 
 - **subscriptionId** (`Nat`): The ID of a registered Subscription.
 - **namespace** (`Text`): Defines the topic or category that the Subscriber is interested in.
-- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. //todo: point to configs section
+- **config** (`ICRC16Map`): Configuration for the subscription, including elements like message filters or skip patterns. [See Subscription Configs](#Subscription-Configs)
 - **stats** (`ICRC16Map`): Statistical information regarding the Subscriber's activity, such as number of messages received, active subscriptions, etc.
 
 
@@ -426,7 +426,7 @@ Represents data about a subscription and its statistics.
 
 - **subscriber** (`principal`): The principal ID of the entity subscribed to the events.
 - **namespace** (`text`): The namespace pertaining to the subscribed events.
-- **config** (`ICRC16Map`): Configuration settings specific to the Subscriber, which may include filters and skip details.
+- **config** (`ICRC16Map`): Configuration settings specific to the Subscriber, which may include filters and skip details.[See Subscription Configs](#Subscription-Configs)
 - **stats** (`ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
 
 #### SubscriptionUpdate
@@ -476,8 +476,24 @@ type SubscriptionUpdate = record {
     subscription : variant {
         id: SubscriptionIdentifier;
         namespace: text;
-    };;
+    };
     newConfig : opt ICRC16Map;
+    memo: blob;
+};
+
+type SubscriptionDelete = record {
+    subscription : variant {
+        id: SubscriptionIdentifier;
+        namespace: text;
+    };
+    memo: blob;
+};
+
+type PublicationDelete = record {
+    publication : variant {
+        id: SubscriptionIdentifier;
+        namespace: text;
+    };
     memo: blob;
 };
 ```
@@ -491,7 +507,7 @@ The following items SHOULD be used for the indicated patterns:
  * `icrc72:subscription:skip`: Array[Nat, Nat]; Get every Xth message with an optional offset.
  * `icrc72:subscription:filter`: Text; The ICRC16 Path filter
  * `icrc72:subscription:stopped`: Bool; Do you want the subscription started upon registration;
- * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi canister round-robin subscriptions where you need an array of handlers.
+ * `icrc72:subscription:controllers:add` : Array([#Blob(PrincipalAsBlob]); Controllers are only relevant for multi-canister round-robin subscriptions where you need an array of handlers.
  * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
 
 **Batch Note** - If the client needs more granular control of atomicity they may submit config changes one at a time and react appropriately to failures.  Implementors MAY implement their own transactional system, but it is not required.  Implementors MAY restrict config changes to accept only one item at a time.
@@ -589,7 +605,9 @@ Generally, pub/sub should be ONLY inter-canister methods. If you want to publish
    
 4. **icrc72_update_subscription**: Similar to publication updates, this method accepts a vector of `SubscriptionUpdate` records for updating existing subscriptions. The outputs are encapsulated in a vector of optional `UpdateSubscriptionResult`, detailing the success or error of each subscription update action. This allows Subscribers to modify aspects of their subscriptions like filters, skips, or activation status.
 
-//todo: add delete for publication and subscription
+5. **icrc72_delete_subscription**: Delete a subscription. The canister should stop receiving events from the broadcaster once this request has diffused through the event system. The canister MAY continue to receive events if that takes some time.
+   
+6. **icrc72_delete_publication**:  Delete a publication. The publication will be removed from the orchestrator and broadcasters. Once the status has diffused through the system the Broadcaster SHOULD no longer accept events or notification confirmations for that event. 
 
 ```candid "Type definitions" +=
 
@@ -607,6 +625,19 @@ type PublicationRegisterError = variant {
   GenericError: GenericError;
   GenericBatchError : Text;
 };
+
+type PublicationDeleteError = variant {
+  Unauthorized; //generally unauthorized
+  GenericError: GenericError;
+  GenericBatchError : Text;
+};
+
+type SubscriptionDeleteError = variant {
+  Unauthorized; //generally unauthorized
+  GenericError: GenericError;
+  GenericBatchError : Text;
+};
+
 
 type SubscriptionRegisterError = variant {
   Unauthorized; //generally unauthorized
@@ -651,11 +682,19 @@ icrc72_register_subscription : (vec SubscriptionRegistration) -> (vec Subscripti
 
 // Update existing publications based on provided configurations.
 // Returns a vector of results, indicating success or providing an error detail for each publication update.
-icrc72_update_publication : (vec PublicationUpdate) -> (vec UpdatePublicationResult);
+icrc72_update_publication : (vec PublicationUpdate) -> (vec PublicationUpdateResult);
 
 // Update existing subscriptions based on provided configurations.
 // Returns a vector of results, indicating success or providing an error detail for each subscription update.
-icrc72_update_subscription : (vec SubscriptionUpdate) -> (vec UpdateSubscriptionResult);
+icrc72_update_subscription : (vec SubscriptionUpdate) -> (vec SubscriptionUpdateResult);
+
+// Delete existing subscriptions.
+// Returns a vector of results, indicating success or providing an error detail for each subscription deletion.
+icrc72_delete_subscription : (vec SubscriptionDelete) -> (vec SubscriptionDeleteResult);
+
+// Delete existing publication.
+// Returns a vector of results, indicating success or providing an error detail for each subscription update.
+icrc72_delete_publication : (vec PublicationDelete) -> (vec PublicationDeleteResult);
 ```
 
 ### Orchestrator Query Methods
@@ -862,8 +901,7 @@ Appendix: [Decision to return simple confirmation message](https://github.com/ic
 icrc72_get_broadcaster_stats : () -> (BroadcasterStats) query;
 ```
 
-//todo: Yes! Add comments about handling the definitions of statistics outside this ICRC
-
+A future standard to be published under ICRC-92 will define canonical and generally used configurations for ICRC-72 canisters that implementors SHOULD implement unless they have devised an alternative schema for good reasons.
 
 ## Subscriber Canister
 
