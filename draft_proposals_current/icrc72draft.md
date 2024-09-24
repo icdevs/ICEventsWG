@@ -1,6 +1,6 @@
 |ICRC|Title|Author|Discussions|Status|Type|Category|Created|
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-|72|Minimal Event-Driven Pub-Sub Standard|Austin Fatheree (@skilesare),Ilia Agafonov @ava-vs, Byron Becker @byronbecker, Ethan Celletti @gekctek, Lachlan Witham, Zhenya Usenko, Matthew Harmon|https://github.com/dfinity/ICRC/issues/72|Draft|Standards Track|Protocols|2024-04-10|
+|72|Minimal Event-Driven Pub-Sub Standard|Austin Fatheree (@skilesare),Ilia Agafonov @ava-vs, Byron Becker @byronbecker, Ethan Celletti @gekctek, Lachlan Witham, Zhenya Usenko, Matthew Harmon|https://github.com/dfinity/ICRC/issues/72|Draft|Standards Track|Protocols|2024-09-24|
 
 # ICRC-72: Minimal Event-Driven Pub-Sub Standard
 
@@ -10,7 +10,7 @@ The publish-subscribe pattern, a pivotal architectural style, allows components 
 
 Key components of ICRC-72 include:
 - **Publishers** who generate and send messages to Broadcasters.
-- **Broadcasters** who receive messages from Publishers and distribute them to all registered Subscribers. When a Broadcaster relays an event to a different subnet it is referred to as an **Event Relayer**.
+- **Broadcasters** who receive messages from Publishers and distribute them to all registered Subscribers. When a Broadcaster sends an event notification to a broadcaster on a different subnet it is referred to as an **Event Relayer**.
 - **Subscribers** who listen for messages of interest from Broadcasters and process them accordingly.
 - **Orchestrator** who manages network topography, subscriptions, publications, and assignments.
 
@@ -28,7 +28,7 @@ type Namespace : text;
 
 Events on the IC SHOULD use a namespacing pattern that ensures the event namespace does not infringe on the scope of other possible messages.  For more information see [this thread](https://forum.dfinity.org/t/proposal-to-adopt-the-namespaced-interfaces-pattern-as-a-best-practice-for-ic-developers/9262). 
 
-For example, do not use a namespace of "transfer" as many other canisters on the IC may have similar "transfer" events and your event may become inoperable with other canisters that already consume the "transfer" event. Users SHOULD choose a namespace that they can demonstrate control over. For example if you own the domain foo.com, a good namespace would be com.foo.{application}.transfer. Future event systems MAY ask you to prove ownership of a domain that you with to create a publication for.
+For example, do not use a namespace of "transfer" as many other canisters on the IC may have similar "transfer" events and your event may become inoperable with other canisters that already consume the "transfer" event. Users SHOULD choose a namespace that they can demonstrate control over. For example, if you own the domain foo.com, a good namespace would be com.foo.{application}.transfer. Future event systems MAY ask you to prove ownership of a domain that you with to create a publication for.
 
 The use of namespaces with wildcards and filters can significantly enhance the usability and effectiveness of subscription systems. This approach offers users the ability to finely adjust event monitoring, providing both precision and adaptability in dynamic information environments. For instance, namespaces can be structured using wildcards such as *.category.* or *.topic.*, allowing for broad or specific event categorization. Filters can then be applied to further refine subscriptions, such as category: [sports, technology] or topic: [finance, marketing], enabling users to tailor their subscriptions to their specific interests and needs.
 
@@ -66,7 +66,7 @@ Events are published from Publishers by being sent to Broadcasters.
 - **timestamp** (`nat`): The Unix epoch timestamp in nanos denoting when the event occurred.
 - **namespace** (`text`): A textual descriptor that categorizes the event into a domain-specific context for easier management and filtering.
 - **data** (`ICRC16`): The payload of the event, conforms to the ICRC-16 data standard which provides a versatile structure to accommodate various data formats.
-- **header** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
+- **headers** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 
 ```motoko
 // An event structure being published
@@ -93,7 +93,7 @@ type EventIdentifier = nat;
 
 2. Event identifiers MUST be unique for a specific event namespace.
 
-2. Events MAY specify a `prevId` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prevId` based on implementation specifics, such that:
+3. Events MAY specify a `prevId` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prevId` based on implementation specifics, such that:
 
    - In Single Publisher, Single Broadcaster systems, a consistent chain of messages SHOULD be maintained with no messages being dropped.
    
@@ -115,13 +115,13 @@ Subscribers receive event notifications from Broadcasters.
 
 ```candid "Type definitions" +=
   type EventNotification = {
-    id: EventNotificationID;
+    id: EventNotificationId;
     eventId: nat;
-    preEventId: opt nat;
+    prevEventId: opt nat;
     timestamp: nat
     namespace: text;
     data: ICRC16;
-    headers: ?ICRC16Map
+    headers: ?EventHeaders
     source: Principal;
     filter: ?text;
   };
@@ -131,9 +131,9 @@ Subscribers receive event notifications from Broadcasters.
 - **eventId** (`nat`): The identifier of the original event that triggered this notification.
 - **eventPrevId** (`opt nat`): A unique identifier for the previous event if applicable.
 - **timestamp** (`nat`): Time at which the notification was generated, in Unix epoch format, nanoseconds.
-- **namespace** (`text`): The namespace of the event, serving as a categorizational tool to differentiate events.
+- **namespace** (`text`): The namespace of the event, serves as a categorization tool to differentiate events.
 - **data** (`ICRC16`): Data associated with the event, encoded according to ICRC-16 specifications.
-- **header** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
+- **headers** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 - **source** (`Principal`): The principal ID of the canister that dispatched the event.
 - **filter** (`?text`): Optional text filter that was used to filter a positive match for this event.
 
@@ -145,7 +145,7 @@ type EventNotificationId = nat;
 
 1. Event notification identifiers MUST be represented as natural numbers with infinite precision. These numbers MAY be blob representations of more complex numbering schemes, converted to natural numbers. If an identifier is encoded, it MUST be encoded using Crockford's Base32, as specified at [Crockford's Base32](https://www.crockford.com/base32.html).
 
-2. Event Notification Ids will only be consistent and unique in the context of the Broadcaster that related the event in the notification.
+2. Event Notification IDs will only be consistent and unique in the context of the Broadcaster that is related to the event in the notification.
 
 #### Event Notification Source
 
@@ -155,7 +155,7 @@ Event Notifications include a Source that is the principal of the canister that 
 
 The `icrc72_handle_notification` and `icrc72_handle_notification_trusted` endpoints provide the Broadcaster principal in the msg.caller variable included with the message.  `id` and `prevId` of an event are converted to `eventId` and `prevEventId` in the outgoing notifications.
 
-`icrc72_handle_notification_trusted` may be used in event systems where the Publisher or Broadcaster trust all possible Subscribers such that there is no risk of a Subscriber rendering the calling canister un-upgradable by withholding a response.
+`icrc72_handle_notification_trusted` may be used in event systems where the Publisher or Broadcaster trusts all possible Subscribers such that there is no risk of a Subscriber rendering the calling canister un-upgradable by withholding a response.
 
 ```motoko
 // An event structure being published
@@ -189,13 +189,13 @@ type EventHeader = ICRC16MapItem;
 type EventHeaders = ICRC16Map;
 ```
 
-Events also have an optional header property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for ICRC-72 completeness, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, a relay and ultimately to a Subscriber, the network participants may add headers to this collection.
+Events also have an optional `headers` property that, if provided should be an ICRC16Map.  This collection allows for the emitter to provide additional data that is not directly relevant for ICRC-72 completeness, but that may be important for validation or measurement of the event.  As the event travels from the Publisher, through a Broadcaster, an Event Relayer, and ultimately to a Subscriber, the network participants may add headers to this collection.
 
 For the purposes of this standard, the following headers are established:
 
 - `icrc72:eventData:hash` - a #Blob containing the representational independent hash of the event. See: https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-3/HASHINGVALUES.md
 - `icrc72:broadcaster:received` - a #Nat the timestamp that the Broadcaster received the event.
-- `icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and second item is the total Subscriber count.
+- `icrc72:broadcaster:priority` - a #Array of #Nat where the first item is the position in priority and the second item is the total Subscriber count.
 - `icrc72:relay:sent` - a #Nat the timestamp that the Broadcaster sent the event to a relay.
 - `icrc72:relay:received` - a #Nat the timestamp that the relay received the event.
 - `icrc72:broadcaster:sent` - a #Nat the timestamp that the Broadcaster sent the event.
@@ -248,9 +248,9 @@ type ICRC16 =
 };
 ```
 
-Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `header` collection and must be append-only such that no headers are overwritten or changed.
+Event Broadcaster Canisters MUST NOT manipulate the `data` field.  Any data annotations should be done in the `headers` collection and must be append-only such that no headers are overwritten or changed.
 
-While event publishers can use CBOR or other binary encodings to send data, we encourage the use of candid as a lingua franca of the Internate Computer.
+While event publishers can use CBOR or other binary encodings to send data, we encourage the use of candid as a lingua franca of the Internet Computer.
 
 ### Publication Data Types
 
@@ -278,7 +278,7 @@ let publicationRegistration = {
 Represents a particular publication namespace and any statistics about that publication.
 
 - **namespace** (`text`): Identifier for the category or domain of publication.
-- **stats** (`ICRC16Map`): Statistical data relevant to the publication, possibly including metrics like number of Subscribers, total events published, etc.
+- **stats** (`ICRC16Map`): Statistical data relevant to the publication, possibly including metrics like the number of Subscribers, total events published, etc.
 
 #### PublisherInfo
 
@@ -342,7 +342,7 @@ Appendix: [Memo and created at time discussion](https://github.com/icdevs/ICEven
 
 #### Publications Configs
 
-When registering a publication, a Publisher MAY provide a configuration as a `ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
+When registering a publication, a Publisher MAY provide a configuration as an `ICRC16Map` that contains relevant information for the event such as allow lists, disallow lists, ICRC-75 dynamic lists, publications modes, etc.  It is up to the implementation to decide which are necessary and supported.
 
 The following items SHOULD be used for the indicated patterns:
 
@@ -500,7 +500,7 @@ type PublicationDelete = record {
 
 #### Subscription Configs
 
-When registering a subscription, a Publisher MAY provide a configuration as a `ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
+When registering a subscription, a Publisher MAY provide a configuration as an `ICRC16Map` that contains relevant information for the subscription such as skips, filters, creating stopped, etc.  It is up to the implementation to decide which are necessary and supported.
 
 The following items SHOULD be used for the indicated patterns:
 
@@ -710,7 +710,7 @@ Retrieves details about which Broadcasters a Subscriber should allow notificatio
 
 - **Returns**:
   - A variant of `list` which is a  `vec principals` which the Subscriber should accept notifications from.
-  - or variant `icrc75` which is a `ICRC75Item` that points to a canister and namespace that contains the valid Broadcasters
+  - or variant `icrc75` which is an `ICRC75Item` that points to a canister and namespace that contains the valid Broadcasters
 
 #### icrc72_get_publishers
 
@@ -738,7 +738,7 @@ Fetches information about registered publications in a paginated format, optiona
 
 #### icrc72_get_subscribers
 
-Retrieves a list of all Subscribers known to the Orchestrator, support pagination and statistical filtering.
+Retrieves a list of all Subscribers known to the Orchestrator, and supports pagination and statistical filtering.
 
 - **Parameters**:
   - `prev : opt nat`: Optional. The principal of the last Subscriber in the last fetched list for pagination.
@@ -753,7 +753,7 @@ Retrieves a list of all Subscribers known to the Orchestrator, support paginatio
 Fetches details about subscriptions to a specific publication namespace, including optional statistical filtering.
 
 - **Parameters**:
-  - `prev`: Optional. Principal of the last Subscriber in previous fetch to continue pagination.
+  - `prev`: Optional. Principal of the last Subscriber in the previous fetch to continue pagination.
   - `take`: Optional. Number of subscription entries to return.
   - `filter`: Optional. Filters for retrieving specific statistical data.
 
@@ -762,7 +762,7 @@ Fetches details about subscriptions to a specific publication namespace, includi
 
 #### icrc72_get_broadcasters
 
-Returns a list of all Broadcasters known to the system, supports pagination and statistical filters.
+Returns a list of all Broadcasters known to the system, and supports pagination and statistical filters.
 
 - **Parameters**:
   - `prev : opt nat`: Optional. The principal of the last Broadcaster from the previous query result for pagination continuation.
@@ -798,43 +798,43 @@ type OrchestrationFilter = record {
 };
 
 // Returns the Publishers known to the Orchestrator
-icrc72_get_valid_broadcasters() -> async variant {
+icrc72_get_valid_broadcasters() -> (variant {
   list : vec principal;
   icrc75 : ICRC75Item;
-};
+}) query;
 
 // Returns the Publishers known to the Orchestrator
 icrc72_get_publishers({
   prev: opt principal;
   take: opt nat;
   filter: opt OrchestrationFilter;
-}) -> query vec PublisherInfo;
+}) -> (vec PublisherInfo) query;
 
 //get publications known to the Orchestrator
 icrc72_get_publications({
   prev: opt text;
   take: opt nat;
   filter: opt OrchestrationFilter;
-}) -> query vec PublicationInfo;
+}) -> (vec PublicationInfo) query;
 
 // Returns the Subscribers known to the Orchestrator
 icrc72_get_subscribers({
   prev: opt principal;
   take: opt nat;
   filter: opt OrchestrationFilter;
-}) -> query vec SubscriberInfo;
+}) -> (vec SubscriberInfo) query;
 
 icrc72_get_subscriptions({
   prev: opt nat;
   take: opt nat;
   filter: opt OrchestrationFilter;
-}) -> query vec SubscriptionInfo;
+}) -> (vec SubscriptionInfo) query;
 
 icrc72_get_broadcasters({
   prev: opt principal;
   take: opt nat;
   filter: opt OrchestrationFilter;
-}) -> query vec BroadcasterInfo;
+}) -> (vec BroadcasterInfo) query;
 ```
 
 ## Broadcaster Canister
@@ -848,7 +848,7 @@ These functions define the capabilities of a Broadcaster Canister in the pub-sub
 - **Type**: Update method
 - **Parameters**: A vector of `Event` records.
 - **Returns**: A vector of option types either indicating the successful processing with a vector of `nat` representing notification identifiers, or an error as `PublishError`.
-- **Summary**: Accepts a list of events from Publishers and attempts to process and distribute these events to relevant Subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: Relays will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relay and care should be taken to validate the sender.
+- **Summary**: Accepts a list of events from Publishers and attempts to process and distribute these events to relevant Subscribers. It responds with either a list of event identifiers that have been successfully broadcasted or errors encountered during the process. Note: EventRelayers will use this endpoint and implementations will need to inspect the source to see if it matches the caller...if not, then it should be assumed the item is a relayed event and care should be taken to validate the sender.
 
 #### icrc72_confirm_notifications
 
@@ -875,7 +875,7 @@ icrc72_publish(vec Event) : vec opt variant{
 };
 
 
-icrc72_confirm_notifications(vec nat) -> variant{
+icrc72_confirm_notifications(vec nat) -> variant {
   allAccepted;
   itemized: vec opt variant {
     #Ok; //discussion point: cycles charged?
@@ -901,7 +901,7 @@ Appendix: [Decision to return simple confirmation message](https://github.com/ic
 icrc72_get_broadcaster_stats : () -> (BroadcasterStats) query;
 ```
 
-A future standard to be published under ICRC-92 will define canonical and generally used configurations for ICRC-72 canisters that implementors SHOULD implement unless they have devised an alternative schema for good reasons.
+A future standard to be published under ICRC-92 will define canonical and generally used statistics for ICRC-72 canisters that implementors SHOULD implement unless they have devised an alternative schema for good reasons.
 
 ## Subscriber Canister
 
@@ -923,13 +923,12 @@ A future standard to be published under ICRC-92 will define canonical and genera
   
 ```candid "Methods" +=
 
-icrc72_handle_notification(vec notification) : -> () //oneshot
+icrc72_handle_notification :(vec notification) -> () //oneshot
 
-icrc72_handle_notification_trusted(vec notification) : -> variant{
-  //discussion point https://github.com/icdevs/ICEventsWG/issues/2#issuecomment-2054079257
+icrc72_handle_notification_trusted : (vec notification) -> (variant{
   #Ok: Value
   #err: Text;
-};
+});
 ```
 
 Appendix: (Add a trusted endpoint for smaller implementations)[https://github.com/icdevs/ICEventsWG/issues/14]
@@ -958,9 +957,9 @@ Please see the [ICRC-7 specifications](https://github.com/dfinity/ICRC/blob/main
 
 ## Publisher Life Cycle
 
-A Publisher that would like to publish events must register it's publication with the Orchestrator.  The Orchestrator is responsible for ensuring a Broadcaster exists, notifying the Broadcaster, and then the Broadcaster will alert the Publisher that it is ready to receive events by emitting an ICRC-72 event notification via icrc72_handle_notifications.
+A Publisher that would like to publish events must register its publication with the Orchestrator.  The Orchestrator is responsible for ensuring a Broadcaster exists, notifying the Broadcaster, and then the Broadcaster will alert the Publisher that it is ready to receive events by emitting an ICRC-72 event notification via icrc72_handle_notifications.
 
-This makes each Publisher also as Subscriber and there for the Publisher should not start broadcasting events until after it has heard from a Broadcaster that it is ready to listen.
+This makes each Publisher also a Subscriber and therefore the Publisher should not start broadcasting events until after it has heard from a Broadcaster that it is ready to listen.
 
 In order to ensure that the Publisher only listens to Broadcasters that are overseen by the orchestrator, the Publisher should follow the Subscriber workflow and query the orchestrator for a list of valid Broadcasters before registering publications.
 
@@ -1012,7 +1011,7 @@ sequenceDiagram
     Pub->>Orch: icrc72_get_valid_broadcasters()
 
     Pub->>Orch: icrc72_register_subscription(icrc72:publisher:sys:pid)
-    Orch->>Orch: Self register as a Publisher for icrc72:publisher:sys:pid
+    Orch->>Orch: Self-register as a Publisher for icrc72:publisher:sys:pid
     
     Orch->>Orch: Broadcast Assignment
     Orch->>BC: Assign Publication to Broadcaster
@@ -1029,21 +1028,21 @@ sequenceDiagram
 
 A Broadcaster will listen for events from the Orchestrator to make sure it has valid event routing information.  The Orchestrator is responsible for emitting an ICRC-72 event that provides the Broadcaster with its assigned subscriptions and publications.
 
-This makes each Broadcaster also as Subscriber.
+This makes each Broadcaster also a Subscriber.
 
 Work flow:
 
 1. Broadcaster registers as a Subscriber to the namespace `icrc72:broadcaster:sys:{principal as Text}` by calling the icrc72_register_subscription method.
 2. Broadcaster will receive Broadcaster assignments via a notification that has a data structure as follows:
 
-  - `icrc72:broadcaster:publisher:add`: Array[ Array[Text, Blob]] - optional - Publisher the Broadcaster can expect events for.
-  - `icrc72:broadcaster:publisher:remove`: Array[ Array[Text, Blob]] - optional - Publisher the Broadcaster is no longer responsible for.
-  - `icrc72:broadcaster:subscriber:add`: Array[ Array[Text, Blob]] - optional - Subscriber the Broadcaster can expect events for.
-  - `icrc72:broadcaster:subscriber:remove`: Array[ Array[Text, Blob]] - optional - Subscriber the Broadcaster is no longer responsible for.
-  - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob]] - optional - subscriptions being added as a relay and the target relay canister
-  - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob]] - optional - subscriptions being removed as a relay and the target relay canisters to remove
-  - `icrc72:broadcaster:relayer:add`: Array[Array[Text, Blob]] - optional - relayer being added as a relay and the target relay canister
-  - `icrc72:broadcaster:relayer:remove`: Array[Array[Text,Blob]] - optional - relayer being removed as a relay and the target relay canisters to remove
+  - `icrc72:broadcaster:publisher:add`: Array[ Array[Text, Blob]] - optional - namespace, Publisher Principal as Blob - Publisher the Broadcaster can expect events for.
+  - `icrc72:broadcaster:publisher:remove`: Array[ Array[Text, Blob]] - optional - namespace, Publisher Principal as Blob - Publisher the Broadcaster is no longer responsible for.
+  - `icrc72:broadcaster:subscriber:add`: Array[ Array[Text, Blob]] - optional - namespace, Subscriber Principal as Blob -Subscriber the Broadcaster can expect events for.
+  - `icrc72:broadcaster:subscriber:remove`: Array[ Array[Text, Blob]] - optional - namespace, Subscriber Principal as Blob - Subscriber the Broadcaster is no longer responsible for.
+  - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob]] - optional - namespace, targetBroadcaster Principal as Blob - subscriptions being added as an relayed subscription and the target event relayer canister
+  - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob]] - optional- namespace, targetBroadcaster Principal as Blob - subscriptions being removed as a relayed subscription and the target event relayer canisters to remove
+  - `icrc72:broadcaster:relayer:add`: Array[Array[Blob]] - optional - targetBroadcaster Principal as Blob - broadcaster being added as an event relayer and the target broadcaster
+  - `icrc72:broadcaster:relayer:remove`: Array[Array[Blob]] - optional - targetBroadcaster Principal as Blob - broadcaster being removed as an event relayer and the target broadcaster
 
 3. Once the Broadcaster receives an event, it needs to pull the needed data from the Orchestrator that it needs to fulfill its job. This includes pulling publication info and subscription info.
  
@@ -1074,13 +1073,13 @@ Work flow:
 
  ## Subscriber Life Cycle
 
-A Subscriber that would like to subscribe to events must register it's subscription with the Orchestrator.  The Orchestrator is responsible for emitting an ICRC-72 event that provides the Publisher with its assigned broadcaster canister(s).
+A Subscriber that would like to subscribe to events must register its subscription with the Orchestrator.  The Orchestrator is responsible for emitting an ICRC-72 event that provides the Publisher with its assigned broadcaster canister(s).
 
 Workflow:
 
 1. Subscriber registers as a Subscriber to the namespace `icrc72:subscriber:sys:{principal as Text}` by calling the icrc72_register_subscription method.
 2. Subscriber registers as a Subscriber for the events it will publish with by calling `icrc72_register_subscription` and receives back a subscriptionId from the Orchestrator.
-3. Subscriber will receive a subscription activated message via a notification that has a data structure as follows:
+3. Subscriber will receive a subscription-activated message via a notification that has a data structure as follows:
 
   - `icrc72:subscriber:broadcaster:add`: Array[Text,Blob] - ID of the subscriptions activated and the the expected Broadcasters
   - `icrc72:subscriber:broadcaster:remove`: Array[Text,Blob] - ID of the subscriptions activated and the the expected Broadcasters
