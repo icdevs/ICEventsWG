@@ -57,7 +57,7 @@ Events are published from Publishers by being sent to Broadcasters.
     namespace: Namespace;
     data: ICRC16;
     source: principal;
-    headers: ?ICRC16Map
+    headers: opt EventHeaders
   };
 ```
 
@@ -121,9 +121,9 @@ Subscribers receive event notifications from Broadcasters.
     timestamp: nat
     namespace: text;
     data: ICRC16;
-    headers: ?EventHeaders
+    headers: opt EventHeaders
     source: Principal;
-    filter: ?text;
+    filter: opt text;
   };
 ```
 
@@ -135,7 +135,7 @@ Subscribers receive event notifications from Broadcasters.
 - **data** (`ICRC16`): Data associated with the event, encoded according to ICRC-16 specifications.
 - **headers** (`opt ICRC16Map`): Data annotation and statistics about the event that may be relevant to intermediate or receiving parties.
 - **source** (`Principal`): The principal ID of the canister that dispatched the event.
-- **filter** (`?text`): Optional text filter that was used to filter a positive match for this event.
+- **filter** (`opt text`): Optional text filter that was used to filter a positive match for this event.
 
 #### Event Notification Identifiers
 
@@ -399,7 +399,7 @@ let subscriptionRegistration = record {
     ("icrc72:subscription:skip", #Array([#Nat(5),#Nat(1)])),
     ("icrc72:subscription:filter", #Text("host[name ~= John]"))
   ];
-  memo: ?Text.toUtf8("Initial subscription of MyApp events")
+  memo: opt Text.toUtf8("Initial subscription of MyApp events")
 };
 ```
 
@@ -878,7 +878,7 @@ icrc72_publish(vec Event) : vec opt variant{
 icrc72_confirm_notifications(vec nat) -> variant {
   allAccepted;
   itemized: vec opt variant {
-    #Ok; //discussion point: cycles charged?
+    #Ok;
     #Err: ConfirmationError;
   };
 };
@@ -963,7 +963,7 @@ This makes each Publisher also a Subscriber and therefore the Publisher should n
 
 In order to ensure that the Publisher only listens to Broadcasters that are overseen by the orchestrator, the Publisher should follow the Subscriber workflow and query the orchestrator for a list of valid Broadcasters before registering publications.
 
-Work flow:
+Workflow:
 
 1. Publisher acts as a Subscriber and queries valid Broadcasters via the icrc72_get_valid_broadcasters endpoint.
 2. Publisher registers as a Subscriber to the namespace `icrc72:publisher:sys:{principal as Text}` by calling the icrc72_register_subscription method.
@@ -982,7 +982,7 @@ Work flow:
 
  ```motoko
   #Map([
-    ("icrc72:publicatioN:broadcaster:add": #Array([#Nat(123),#Blob([83...28])]))
+    ("icrc72:publication:broadcaster:add": #Array([#Nat(123),#Blob([83...28])]))
   ])
  ```
  
