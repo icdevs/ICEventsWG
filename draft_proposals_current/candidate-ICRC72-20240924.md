@@ -317,7 +317,7 @@ type PublicationInfo = record {
 
 type PublicationUpdateRequest = record {
     publication : PublicationIdentifier;
-    config : opt ICRC16Map;
+    config : opt ICRC16MapItem;
     memo: blob;
 };
 
@@ -659,7 +659,7 @@ type SubscriptionRegisterResult = opt variant {
   Err: SubscriptionRegisterError;
 };
 
-type UpdatePublicationResult = opt variant {
+type PublicationUpdateResult = opt variant {
   Ok: bool;
   Err: PublicationRegisterError;
 };
@@ -667,6 +667,11 @@ type UpdatePublicationResult = opt variant {
 type SubscriptionUpdateResult = opt variant {
   Ok: bool;
   Err: SubscriptionRegisterError;
+};
+
+type PublicationUpdateResult = opt variant {
+  Ok: bool;
+  Err: PublicationRegisterError;
 };
 
 ```
