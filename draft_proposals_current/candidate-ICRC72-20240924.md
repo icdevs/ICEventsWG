@@ -51,8 +51,8 @@ Events are published from Publishers by being sent to Broadcasters.
 ```candid "Type definitions" +=
 
   type Event = {
-    id: EventIdentifier;
-    prevId: opt EventIdentifier;
+    eventId: EventIdentifier;
+    prevEventId: opt EventIdentifier;
     timestamp: Timestamp
     namespace: Namespace;
     data: ICRC16;
@@ -61,8 +61,8 @@ Events are published from Publishers by being sent to Broadcasters.
   };
 ```
 
-- **id** (`nat`): A unique identifier for the event, allowing for distinct referencing across an event namespace.
-- **prevId** (`opt nat`): A unique identifier for the previous event if applicable.
+- **eventId** (`nat`): A unique identifier for the event, allowing for distinct referencing across an event namespace.
+- **prevEventId** (`opt nat`): A unique identifier for the previous event if applicable.
 - **timestamp** (`nat`): The Unix epoch timestamp in nanos denoting when the event occurred.
 - **namespace** (`text`): A textual descriptor that categorizes the event into a domain-specific context for easier management and filtering.
 - **data** (`ICRC16`): The payload of the event, conforms to the ICRC-16 data standard which provides a versatile structure to accommodate various data formats.
@@ -71,8 +71,8 @@ Events are published from Publishers by being sent to Broadcasters.
 ```motoko
 // An event structure being published
 let event = {
-  id = 123456789;
-  prevId = 123456788;
+  eventId = 123456789;
+  prevEventId = 123456788;
   timestamp= 1672525600000000000;  // Example timestamp in nanoseconds
   namespace = "com.example.myapp.events";
   data: #Map([
@@ -93,7 +93,7 @@ type EventIdentifier = nat;
 
 2. Event identifiers MUST be unique for a specific event namespace.
 
-3. Events MAY specify a `prevId` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prevId` based on implementation specifics, such that:
+3. Events MAY specify a `prevEventId` to indicate the immediately preceding message identifier known by the broadcasting system. Event systems SHOULD provide `null` in scenarios where event ordering is not critical or where ordering depends on details internal to the identifier. Event systems MAY interpret the `prevId` based on implementation specifics, such that:
 
    - In Single Publisher, Single Broadcaster systems, a consistent chain of messages SHOULD be maintained with no messages being dropped.
    
@@ -115,7 +115,7 @@ Subscribers receive event notifications from Broadcasters.
 
 ```candid "Type definitions" +=
   type EventNotification = {
-    id: EventNotificationId;
+    notificationId: EventNotificationId;
     eventId: nat;
     prevEventId: opt nat;
     timestamp: nat
@@ -127,7 +127,7 @@ Subscribers receive event notifications from Broadcasters.
   };
 ```
 
-- **id** (`nat`): Unique identifier for the event notification.
+- **notificationId** (`nat`): Unique identifier for the event notification.
 - **eventId** (`nat`): The identifier of the original event that triggered this notification.
 - **eventPrevId** (`opt nat`): A unique identifier for the previous event if applicable.
 - **timestamp** (`nat`): Time at which the notification was generated, in Unix epoch format, nanoseconds.
@@ -160,7 +160,7 @@ The `icrc72_handle_notification` and `icrc72_handle_notification_trusted` endpoi
 ```motoko
 // An event structure being published
 let eventNotification = {
-  id = 987654321;
+  notificationId = 987654321;
   eventId = 123456789;
   eventPrevId = 123456788;
   timestamp= 1672525600000000000;  // Example timestamp in nanoseconds
