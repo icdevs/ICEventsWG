@@ -1041,8 +1041,8 @@ Work flow:
   - `icrc72:broadcaster:subscriber:remove`: Array[ Array[Text, Blob]] - optional - namespace, Subscriber Principal as Blob - Subscriber the Broadcaster is no longer responsible for.
   - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob]] - optional - namespace, targetBroadcaster Principal as Blob - subscriptions being added as an relayed subscription and the target event relayer canister
   - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob]] - optional- namespace, targetBroadcaster Principal as Blob - subscriptions being removed as a relayed subscription and the target event relayer canisters to remove
-  - `icrc72:broadcaster:relayer:add`: Blob[] - optional - targetBroadcaster Principal as Blob - broadcaster being added as an event relayer and the target broadcaster
-  - `icrc72:broadcaster:relayer:remove`: Blob[] - optional - targetBroadcaster Principal as Blob - broadcaster being removed as an event relayer and the target broadcaster
+  - `icrc72:broadcaster:relayer:add`: Array[Array[Text,Blob]] - optional - namespace,targetBroadcaster Principal as Blob - broadcaster being added as an event relayer and the target broadcaster
+  - `icrc72:broadcaster:relayer:remove`: Array[Array[Text,Blob]] - optional - namespacetargetBroadcaster Principal as Blob - broadcaster being removed as an event relayer and the target broadcaster
 
 3. Once the Broadcaster receives an event, it needs to pull the needed data from the Orchestrator that it needs to fulfill its job. This includes pulling publication info and subscription info.
  
