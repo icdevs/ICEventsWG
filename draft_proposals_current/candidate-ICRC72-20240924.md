@@ -1039,8 +1039,8 @@ Work flow:
   - `icrc72:broadcaster:publisher:remove`: Array[ Array[Text, Blob]] - optional - namespace, Publisher Principal as Blob - Publisher the Broadcaster is no longer responsible for.
   - `icrc72:broadcaster:subscriber:add`: Array[ Array[Text, Blob]] - optional - namespace, Subscriber Principal as Blob -Subscriber the Broadcaster can expect events for.
   - `icrc72:broadcaster:subscriber:remove`: Array[ Array[Text, Blob]] - optional - namespace, Subscriber Principal as Blob - Subscriber the Broadcaster is no longer responsible for.
-  - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob]] - optional - namespace, targetBroadcaster Principal as Blob - subscriptions being added as an relayed subscription and the target event relayer canister
-  - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob]] - optional- namespace, targetBroadcaster Principal as Blob - subscriptions being removed as a relayed subscription and the target event relayer canisters to remove
+  - `icrc72:broadcaster:relay:add`: Array[Array[Text, Blob, ?Blob, ?Text, ?Array[Nat,Nat]]] - optional - namespace, targetBroadcaster Principal as Blob - subscriptions being added as an relayed subscription and the target event relayer canister, optionally subscriberBlob, Filter, Skip Array
+  - `icrc72:broadcaster:relay:remove`: Array[Array[Text,Blob, ?Blob, ?Text, ?Array[Nat,Nat]]] - optional- namespace, targetBroadcaster Principal as Blob - subscriptions being removed as a relayed subscription and the target event relayer canisters to remove, optionally subscriberBlob, Filter, Skip Array for detail
   - `icrc72:broadcaster:relayer:add`: Array[Array[Text,Blob]] - optional - namespace,targetBroadcaster Principal as Blob - broadcaster being added as an event relayer and the target broadcaster
   - `icrc72:broadcaster:relayer:remove`: Array[Array[Text,Blob]] - optional - namespacetargetBroadcaster Principal as Blob - broadcaster being removed as an event relayer and the target broadcaster
 
