@@ -1,7 +1,7 @@
 
 
 
-#### PublisherPublicationInfo
+#### Pub;icationInfo
 
 ##### Formally recognized stats values for PublicationInfo 
 
@@ -25,9 +25,9 @@ Non-exclusive. Implementations may add other stats specific to their implementat
 
 Non-exclusive. Implementations may add other stats specific to their implementation.
 
-* `icrc72:publisher:stats:publications`- #Nat; the number of publications being published by the Publisher
-* `icrc72:publisher:stats:cyclesReceived`- #Nat; the number of cycles sent by the system
-* `icrc72:publisher:stats:events`- #Nat; the number of events the publisher has sent
+* `icrc72:publisher_publication:stats:publications`- #Nat; the number of publications being published by the Publisher
+* `icrc72:publisher_publication:stats:cyclesReceived`- #Nat; the number of cycles sent by the system
+* `icrc72:publisher_publication:stats:events`- #Nat; the number of events the publisher has sent
 
 #### Formally recognized stats values for SubscriberSubscriptionInfo
 
