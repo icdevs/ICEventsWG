@@ -287,20 +287,8 @@ Represents a particular Publisher namespace and any statistics about that public
 - **publisher** (`principal`): Principal ID of the Publisher.
 - **stats** (`ICRC16Map`): Contains statistical data concerning the Publisher, such as number of publications, event counts, etc.
 
-#### PublisherPublicationInfo
-
-Represents a particular publication namespace, Publisher tuple and any statistics about that pair.
-
-- **publisher** (`principal`): The identifier of the Publisher.
-- **namespace** (`principal`): The namespace associated with specific publications by the Publisher.
-- **stats** (`ICRC16Map`): Detailed metrics related to publications in the specified namespace by the Publisher.
 
 ``` candid "Type definitions" += 
-
-type PublicationIdentifier = variant {
-  namespace: text;
-  publicationId: nat;
-};
 
 type PublicationRegistration = record {
   namespace: text;
@@ -309,14 +297,14 @@ type PublicationRegistration = record {
 };
 
 type PublicationInfo = record {
-  namespace: text;
   publicationId: nat;
+  namespace: text;
   config: ICRC16Map;
   stats: ICRC16Map;
 }
 
 type PublicationUpdate = record {
-    publication : PublicationIdentifier;
+    publicationId : Nat;
     config : (Text, ICRC16);
     memo: blob;
 };
@@ -326,14 +314,6 @@ type PublisherInfo = record {
   stats: ICRC16Map;
 };
 
-//broken down by namespace
-type PublisherPublicationInfo = record {
-  publisher: principal;
-  namespace: text;
-  publicationId: nat;
-  config: ICRC16Map;
-  stats: ICRC16Map;
-};
 ```
 
 Appendix: [Allowed Publishers and Subscribers should use the config](https://github.com/icdevs/ICEventsWG/issues/18)
@@ -367,7 +347,7 @@ Appendix: [Move allow and disallow to config. Move modes to config](https://gith
 
 Implementations MAY support wildcards for subscriptions.  For example, a subscription to `*.icrc1.transfer` might register a Subscriber to any events that produce a standard icrc1.transfer event regardless of the canister that emitted it.  The subscription canister must take technical limitations into account when making these subscriptions as the canister may overload itself. The wild-card language that is used is purposely left out of this standard and must be defined by the implementation of the events system.
 
-### Filters
+#### Filters
 
 ```candid "Type definitions" += 
 type Filter = Text;
@@ -375,11 +355,11 @@ type Filter = Text;
 
 Filters SHOULD the notations provided in ICRC16 Path Standard.  Event system implementers MAY designate their own format if the previous is not sufficient.
 
-#### Filtering records
+##### Filtering records
 
 A Subscriber MAY provide a filter in textual representation to filter out certain records for the subscription in the config. Implementations SHOULD continue to develop CandyPath that can filter through ICRC-16 values, but the implementation MAY use a text query language of their own choosing.
 
-#### Skipping records
+##### Skipping records
 
 A Subscriber MAY provide a skip config to ask the canister to skip broadcasting for either bandwidth or distribution reasons.   The skip parameter is a tuple of the mod and optional offset `Array[Nat, opt Nat]`.  If the mod is set then the Subscriber should only receive a message if the mod of the value provided is 0.  This can be offset for partitioning by using the optional partition variable.  By using this pattern a Subscriber set can ensure that all messages make it to a set of Subscribers with a distributed message set. 
 
@@ -420,15 +400,6 @@ Represents data about a particular Subscriber and their statistics.
 - **subscriber** (`Principal`): The principal ID of the Subscriber.
 - **stats** (`ICRC16Map`): Statistical information regarding the Subscriber's activity, such as number of messages received, active subscriptions, etc.
 
-#### SubscriberSubscriptionInfo
-
-Represents data about a subscription and its statistics.
-
-- **subscriber** (`principal`): The principal ID of the entity subscribed to the events.
-- **namespace** (`text`): The namespace pertaining to the subscribed events.
-- **config** (`ICRC16Map`): Configuration settings specific to the Subscriber, which may include filters and skip details.[See Subscription Configs](#subscription-configs)
-- **stats** (`ICRC16Map`): Vector of key-value pairs capturing statistical data about the subscription.
-
 #### SubscriptionUpdate
 
 - **subscription** (`variant{id: nat; namespace: text;};`): Identifier of the subscription to be updated.
@@ -438,26 +409,16 @@ Represents data about a subscription and its statistics.
 
 ``` candid "Type definitions" +=
 
-  type SubscriptionIdentifier = nat;
-
-   type SubscriptionRegistration = record {
-     namespace: text;
-     config: ICRC16Map;
-     memo: blob
-   };
+  type SubscriptionRegistration = record {
+    namespace: text;
+    config: ICRC16Map;
+    memo: blob
+  };
 
  type SubscriptionIdentifier = variant{
     namespace: text;
     subscriptionId: nat;
   };
-
-
-type SubscriberSubscriptionInfo = record {
-  subscriptionId : SubscriptionIdentifier;
-  subscriber: principal;
-  config: ICRC16Map;
-  stats: ICRC16Map;
-};
 
 
 type SubscriptionInfo = record {
@@ -511,6 +472,26 @@ The following items SHOULD be used for the indicated patterns:
  * `icrc72:subscription:controllers:remove` : Array([#Blob(PrincipalAsBlob]);
 
 **Batch Note** - If the client needs more granular control of atomicity they may submit config changes one at a time and react appropriately to failures.  Implementors MAY implement their own transactional system, but it is not required.  Implementors MAY restrict config changes to accept only one item at a time.
+
+## Broadcaster Data Types
+
+#### BroadcasterInfo
+
+Represents a particular Broadcaster and any statistics about that broadcaster.
+
+- **broadcaster** (`principal`): Principal ID of the Broadcaster.
+- **stats** (`ICRC16Map`): Contains statistical data concerning the Broadcaster, such as number of publications, subscriptions event counts, etc.
+
+
+``` candid "Type definitions" += 
+
+type BroadcasterInfo = record {
+  broadcaster: principal;
+  stats: ICRC16Map;
+}
+```
+
+
 
 ### Statistics
 
@@ -717,7 +698,7 @@ Retrieves details about which Broadcasters a Subscriber should allow notificatio
 Retrieves a paginated list of Publishers known to the Orchestrator. Filtering based on provided statistical filters is possible.
 
 - **Parameters**:
-  - `prev : opt nat`: Optional. The principal of the last Publisher in the previous query to establish pagination context.
+  - `prev : opt principal`: Optional. The principal of the last Publisher in the previous query to establish pagination context.
   - `take : opt nat`: Optional. Maximum number of Publisher entries to return.
   - `filter : opt OrchestrationFilter`: Optional. Filters for fetching specific slices and statistical data.
 
@@ -729,7 +710,7 @@ Retrieves a paginated list of Publishers known to the Orchestrator. Filtering ba
 Fetches information about registered publications in a paginated format, optionally filtered by statistical metrics.
 
 - **Parameters**:
-  - `prev : opt nat`: Optional. The namespace of the last publication fetched which helps in pagination.
+  - `prev : opt nat`: Optional. The id of the last publication fetched which helps in pagination.
   - `take : opt nat`: Optional. The number of publication entries to return.
   - `filter: opt OrchestrationFilter`: Optional. Filters for fetching slices and statistical data retrieval for each publication.
 
@@ -741,7 +722,7 @@ Fetches information about registered publications in a paginated format, optiona
 Retrieves a list of all Subscribers known to the Orchestrator, and supports pagination and statistical filtering.
 
 - **Parameters**:
-  - `prev : opt nat`: Optional. The principal of the last Subscriber in the last fetched list for pagination.
+  - `prev : opt principal`: Optional. The principal of the last Subscriber in the last fetched list for pagination.
   - `take : opt nat`: Optional. The maximum number of Subscriber entries to return.
   - `filter : opt OrchestrationFilter`: Optional. Statistical filters to narrow down the data retrieval.
 
@@ -753,7 +734,7 @@ Retrieves a list of all Subscribers known to the Orchestrator, and supports pagi
 Fetches details about subscriptions to a specific publication namespace, including optional statistical filtering.
 
 - **Parameters**:
-  - `prev`: Optional. Principal of the last Subscriber in the previous fetch to continue pagination.
+  - `prev`: Optional. Nat of the last Subscription in the previous fetch to continue pagination.
   - `take`: Optional. Number of subscription entries to return.
   - `filter`: Optional. Filters for retrieving specific statistical data.
 
@@ -765,7 +746,7 @@ Fetches details about subscriptions to a specific publication namespace, includi
 Returns a list of all Broadcasters known to the system, and supports pagination and statistical filters.
 
 - **Parameters**:
-  - `prev : opt nat`: Optional. The principal of the last Broadcaster from the previous query result for pagination continuation.
+  - `prev : opt principal`: Optional. The principal of the last Broadcaster from the previous query result for pagination continuation.
   - `take : opt nat`: Optional. The maximum number of Broadcaster entries to be returned.
   - `filter : opt OrchestrationFilter`: Optional. Filters to specify which data to fetch about Broadcasters.
 
